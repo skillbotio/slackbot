@@ -1,0 +1,40 @@
+{
+  "name": "silent-echo-bot",
+  "license": "Apache 2.0",
+  "private": false,
+  "version": "0.1.1",
+  "engines": {
+    "node": "> 6.0.0"
+  },
+  "files": [
+    "lib/src/*.js"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/bespoken/silent-echo-sdk.git"
+  },
+  "scripts": {
+    "tsc": "tsc",
+    "pretest": "npm run tsc",
+    "test": "nyc mocha lib/test/*Test.js",
+    "posttest": "nyc report --reporter=json && codecov -f coverage/*.json",
+    "typings": "typings install"
+  },
+  "dependencies": {
+    "@slack/client": "^3.10.0",
+    "silent-echo-sdk": "^0.1.2"
+  },
+  "devDependencies": {
+    "@types/chai": "^4.0.0",
+    "@types/dotenv": "^4.0.0",
+    "@types/mocha": "^2.2.41",
+    "chai": "^4.0.2",
+    "codecov": "^2.2.0",
+    "dotenv": "^4.0.0",
+    "mocha": "^3.2.0",
+    "nyc": "^10.1.2",
+    "ts-node": "^1.7.0",
+    "tslint": "^4.0.2",
+    "typescript": "^2.3.4"
+  }
+}
