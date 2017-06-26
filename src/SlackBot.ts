@@ -68,7 +68,7 @@ export class SlackBot {
             } else {
                 const reply = "You have not registered with Silent Echo yet. " +
                     "To register, just <https://silentecho.bespoken.io/link_account?token=true|click here>\n" +
-                    "Follow the steps, then copy and paste the token in this chat.\n" +
+                    "Follow the steps, then *copy and paste the token into this chat*.\n" +
                     "Questions? Here is our <https://silentecho.bespoken.io/faq|FAQ>";
                 this.reply(slackToken, slackEvent.channel, reply);
             }
