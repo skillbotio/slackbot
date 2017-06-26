@@ -9,6 +9,7 @@ export class SlackRouter {
     public router(): express.Router {
         const dataManager = new DataManager();
         dataManager.createSlackAuthTable();
+        dataManager.createSlackUserTable();
 
         const slackBot = new SlackBot();
 

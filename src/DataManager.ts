@@ -144,7 +144,7 @@ export class DataManager {
         return new Promise<void>(async (resolve, reject) => {
             const params = {
                 Key: {
-                    team_id: (userID + teamID),
+                    user_id: (userID + teamID),
                 },
                 TableName: "SlackUser",
             };

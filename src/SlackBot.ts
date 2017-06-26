@@ -28,25 +28,59 @@ export class SlackBot {
         }
 
         console.log("Looking up token: " + slackMessage.team_id);
-        let token;
+        let slackToken;
         try {
-            token = await this.lookupToken(slackMessage.team_id);
+            slackToken = await this.lookupToken(slackMessage.team_id);
         } catch (e) {
             Promise.reject(e);
             return;
         }
 
-        console.log("Looked up token");
+        const userToken = await this.lookupUser(slackMessage.team_id, slackEvent.user);
         const message = slackEvent.text;
-        const silentEcho = new SilentEcho("8c08820c-47bb-4736-8451-4581f3bf3fd1");
+
+        // If the user is defined, reply
+        if (userToken) {
+            const silentEcho = new SilentEcho(userToken as string);
+            try {
+                const result: ISilentResult = await silentEcho.message(message);
+                console.log("SentMessageToSilentEcho");
+                this.postMessage(slackToken as string, slackEvent.channel, result.transcript, () => {
+                    console.log("Done processing");
+                });
+            } catch (e) {
+                console.log("Error calling SilentEchoSDK: " + e);
+            }
+        } else {
+            // 8c08820c-47bb-4736-8451-4581f3bf3fd1
+            if (message.length === 36 && message.split("-").length === 5) {
+                await this.dataManager.saveSlackUser(slackMessage.team_id, slackEvent.user, message);
+                this.reply(slackToken, slackEvent.channel, "Thank you for registering. Speak to Alexa!");
+            } else {
+                const reply = "Not registered with Silent Echo yet. To do so, go to: https://silentecho.bespoken.io\n" +
+                    "Register, then click on https://silentecho.bespoken.io/token to get your token\n" +
+                    "Copy and paste the token here:";
+                this.reply(slackToken, slackEvent.channel, reply);
+            }
+        }
+    }
+
+    private reply(slackToken: string, channel: string, message: string) {
         try {
-            const result: ISilentResult = await silentEcho.message(message);
-            console.log("SentMessageToSilentEcho");
-            this.postMessage(token as string, slackEvent.channel, result.transcript, () => {
+            this.postMessage(slackToken as string, channel, message, () => {
                 console.log("Done processing");
             });
         } catch (e) {
             console.log("Error calling SilentEchoSDK: " + e);
+        }
+    }
+
+    private async lookupUser(teamID: string, userID: string): Promise<string|undefined> {
+        const result = await this.dataManager.fetchSlackUser(teamID, userID);
+        if (result) {
+            return result.avs_token;
+        } else {
+            return undefined;
         }
     }
 
