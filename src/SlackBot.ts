@@ -44,8 +44,13 @@ export class SlackBot {
             const silentEcho = new SilentEcho(userToken as string);
             try {
                 const result: ISilentResult = await silentEcho.message(message);
-                console.log("SentMessageToSilentEcho");
-                this.postMessage(slackToken as string, slackEvent.channel, result.transcript, () => {
+                let reply = "";
+                if (result.transcript) {
+                    reply = result.transcript + ".\n<" + result.transcript_audio_url + "|Play>";
+                } else {
+                    reply = "AudioStream Reply: <" + result.stream_url + "|Play>";
+                }
+                this.postMessage(slackToken as string, slackEvent.channel, reply, () => {
                     console.log("Done processing");
                 });
             } catch (e) {
