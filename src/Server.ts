@@ -5,8 +5,8 @@ import {SlackRouter} from "./SlackRouter";
 
 export class Server {
     public start(): void {
-        console.log("CERT:" + process.env.SSL_CERT + " CLIENT: " + process.env.SLACK_CLIENT_ID);
-        const serverPort = process.env.SSL_CERT ? 3000 : 3000;
+        // console.log("CERT:" + process.env.SSL_CERT + " CLIENT: " + process.env.SLACK_CLIENT_ID);
+        const serverPort = process.env.SSL_CERT ? 443 : 3000;
         const app = express();
 
         // JSON Parser
