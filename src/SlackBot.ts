@@ -43,28 +43,23 @@ export class SlackBot {
 
         // If the user is defined, reply
         if (userToken) {
-            if (this.processingSet.has(userToken)) {
-                this.reply(slackToken, slackEvent.channel, "I'm still processing the last message..." +
-                    "I'm going as fast as I can!");
-            } else {
-                this.processingSet.add(userToken);
-                const silentEcho = new SilentEcho(userToken as string);
-                try {
-                    const result: ISilentResult = await silentEcho.message(message);
-                    let reply = "";
-                    if (result.transcript) {
-                        reply = result.transcript + ".\n:ear:<" + result.transcript_audio_url + "|Listen>";
-                    } else if (result.stream_url) {
-                        reply = "AudioStream: :ear:<" + result.stream_url + "|Listen>";
-                    } else {
-                        reply = ":mute: _No reply_";
-                    }
+            console.log("Hastoken: " + this.processingSet.has(userToken));
+            const silentEcho = new SilentEcho(userToken as string);
+            try {
+                const result: ISilentResult = await silentEcho.message(message);
 
-                    this.reply(slackToken, slackEvent.channel, reply);
-                } catch (e) {
-                    console.log("Error calling SilentEchoSDK: " + e);
+                let reply = "";
+                if (result.transcript) {
+                    reply = "<" + result.transcript_audio_url + "|:speaker:>" + result.transcript;
+                } else if (result.stream_url) {
+                    reply = "<" + result.stream_url + "|:speaker:>" + result.stream_url;
+                } else {
+                    reply = ":mute: _No reply_";
                 }
-                this.processingSet.delete(userToken);
+
+                this.reply(slackToken, slackEvent.channel, reply);
+            } catch (e) {
+                console.log("Error calling SilentEchoSDK: " + e);
             }
         } else {
             if (message.length === 36 && message.split("-").length === 5) {

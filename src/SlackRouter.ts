@@ -41,7 +41,7 @@ export class SlackRouter {
             let url = "https://slack.com/oauth/authorize";
 
             url += "?client_id=" + process.env.SLACK_CLIENT_ID;
-            url += "&scope=channels:read chat:write:bot";
+            url += "&scope=bot channels:read chat:write:bot";
             url += "&redirect_url=" + redirectURL;
 
             response.redirect(url);

@@ -1,2 +1,4 @@
 - [ ] For new users, ask them for their token
 - [ ] Implement oauth
+- [ ] Remove message.channels event, for now
+- [ ] Set permission scopes in slack
