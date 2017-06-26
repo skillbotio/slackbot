@@ -10,6 +10,8 @@ RUN mkdir silent-echo-bot
 
 WORKDIR /opt/silent-echo-bot
 
+COPY bin/ ./bin/
+
 COPY src/ ./src/
 
 COPY static/ ./static/
@@ -20,5 +22,5 @@ RUN npm install
 
 RUN npm run tsc
 
-CMD [ "npm", "start" ]
+CMD npm start
 
