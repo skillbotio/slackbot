@@ -11,6 +11,10 @@ dependencies:
     - chmod +x hyper
     - ./hyper --help
 
+test:
+  override:
+    - echo "No tests yet"
+
 deployment:
   api-dev:
     branch: /.*/
