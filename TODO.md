@@ -1,0 +1,2 @@
+- [ ] For new users, ask them for their token
+- [ ] Implement oauth
