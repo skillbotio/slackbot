@@ -5,8 +5,7 @@ import {SlackRouter} from "./SlackRouter";
 
 export class Server {
     public start(): void {
-
-        const serverPort = process.env.USE_SSL === "true" ? 443 : 3000;
+        const serverPort = process.env.SSL_CERT ? 443 : 3000;
         const app = express();
 
         // JSON Parser
@@ -17,7 +16,7 @@ export class Server {
 
         app.use(new SlackRouter().router());
 
-        if (serverPort === 443) {
+        if (process.env.SSL_CERT) {
             const credentials = {
                 cert: process.env.SSL_CERT.replace(/\\n/g, "\n"),
                 key: process.env.SSL_KEY.replace(/\\n/g, "\n"),

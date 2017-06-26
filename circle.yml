@@ -1,0 +1,38 @@
+machine:
+  node:
+    version: 6.9.2
+  services:
+    - docker
+
+dependencies:
+  pre:
+    - wget https://hyper-install.s3.amazonaws.com/hyper-linux-x86_64.tar.gz
+    - tar xzf hyper-linux-x86_64.tar.gz
+    - chmod +x hyper
+    - ./hyper --help
+
+deployment:
+  api-dev:
+    branch: /.*/
+    commands:
+      - docker login -e $DOCKER_EMAIL -u $DOCKER_USER -p $DOCKER_PASS
+      - docker build -f docker/Dockerfile -t bespoken/silent-echo-bot:$CIRCLE_BRANCH .
+      - docker push bespoken/silent-echo-bot:$CIRCLE_BRANCH
+      - ./hyper config --accesskey $HYPER_KEY --secretkey $HYPER_SECRET
+      - ./hyper login -e $DOCKER_EMAIL -u $DOCKER_USER -p $DOCKER_PASS
+      - ./hyper pull bespoken/silent-echo-bot:$CIRCLE_BRANCH
+      - ./hyper rm -f silent-echo-bot || true
+      - >
+        ./hyper run -d
+        -e AWS_ACCESS_KEY_ID=$AWS_ACCESS_KEY_ID
+        -e AWS_SECRET_ACCESS_KEY=$AWS_SECRET_ACCESS_KEY
+        -e BASE_URL=https://silentechobot.bespoken.io
+        -e SLACK_CLIENT_ID=$SLACK_CLIENT_ID
+        -e SLACK_CLIENT_SECRET=$SLACK_CLIENT_SECRET
+        -e SSL_CERT=$SSL_CERT
+        -e SSL_KEY=SSL_KEY
+        --name silent-echo-bot
+        --size s4
+        --restart=always
+        -P bespoken/silent-echo-bot:$CIRCLE_BRANCH
+      - ./hyper fip attach 199.245.56.245 silent-echo-bot

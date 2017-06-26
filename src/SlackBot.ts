@@ -52,7 +52,6 @@ export class SlackBot {
                 console.log("Error calling SilentEchoSDK: " + e);
             }
         } else {
-            // 8c08820c-47bb-4736-8451-4581f3bf3fd1
             if (message.length === 36 && message.split("-").length === 5) {
                 await this.dataManager.saveSlackUser(slackMessage.team_id, slackEvent.user, message);
                 this.reply(slackToken, slackEvent.channel, "Thank you for registering. Speak to Alexa!");
