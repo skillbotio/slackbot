@@ -11,7 +11,7 @@
   ],
   "repository": {
     "type": "git",
-    "url": "git://github.com/bespoken/silent-echo-sdk.git"
+    "url": "git://github.com/bespoken/silent-echo-bot.git"
   },
   "scripts": {
     "tsc": "tsc",
