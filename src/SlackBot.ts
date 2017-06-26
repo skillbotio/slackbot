@@ -4,10 +4,12 @@ import {DataManager} from "./DataManager";
 export class SlackBot {
     private dataManager: DataManager;
     private messageSet: WeakSet<any>;
+    private processingSet: WeakSet<any>;
 
     public constructor() {
         this.dataManager = new DataManager();
         this.messageSet = new WeakSet<any>();
+        this.processingSet = new WeakSet<any>();
     }
 
     public async onMessage(slackMessage: any): Promise<void> {
@@ -41,20 +43,28 @@ export class SlackBot {
 
         // If the user is defined, reply
         if (userToken) {
-            const silentEcho = new SilentEcho(userToken as string);
-            try {
-                const result: ISilentResult = await silentEcho.message(message);
-                let reply = "";
-                if (result.transcript) {
-                    reply = result.transcript + ".\n<" + result.transcript_audio_url + "|Listen>";
-                } else {
-                    reply = "AudioStream Reply: <" + result.stream_url + "|Listen>";
+            if (userToken in this.processingSet) {
+                this.reply(slackToken, slackEvent.channel, "I'm still processing the last message..." +
+                    "I'm going as fast as I can!");
+            } else {
+                this.processingSet.add(userToken);
+                const silentEcho = new SilentEcho(userToken as string);
+                try {
+                    const result: ISilentResult = await silentEcho.message(message);
+                    let reply = "";
+                    if (result.transcript) {
+                        reply = result.transcript + ".\n:ear:<" + result.transcript_audio_url + "|Listen>";
+                    } else if (result.stream_url) {
+                        reply = "AudioStream: :ear:<" + result.stream_url + "|Listen>";
+                    } else {
+                        reply = ":mute: _No reply_";
+                    }
+
+                    this.reply(slackToken, slackEvent.channel, reply);
+                } catch (e) {
+                    console.log("Error calling SilentEchoSDK: " + e);
                 }
-                this.postMessage(slackToken as string, slackEvent.channel, reply, () => {
-                    console.log("Done processing");
-                });
-            } catch (e) {
-                console.log("Error calling SilentEchoSDK: " + e);
+                this.processingSet.delete(userToken);
             }
         } else {
             if (message.length === 36 && message.split("-").length === 5) {
