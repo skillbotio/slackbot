@@ -43,7 +43,7 @@ export class SlackBot {
 
         // If the user is defined, reply
         if (userToken) {
-            if (userToken in this.processingSet) {
+            if (this.processingSet.has(userToken)) {
                 this.reply(slackToken, slackEvent.channel, "I'm still processing the last message..." +
                     "I'm going as fast as I can!");
             } else {
