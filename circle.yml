@@ -33,8 +33,8 @@ deployment:
         -e BASE_URL=https://silentechobot.bespoken.io
         -e SLACK_CLIENT_ID=$SLACK_CLIENT_ID
         -e SLACK_CLIENT_SECRET=$SLACK_CLIENT_SECRET
-        -e SSL_CERT=$SSL_CERT
-        -e SSL_KEY=SSL_KEY
+        -e SSL_CERT="$SSL_CERT"
+        -e SSL_KEY="$SSL_KEY"
         --name silent-echo-bot
         --size s4
         --restart=always
