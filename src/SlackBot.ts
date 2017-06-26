@@ -96,7 +96,7 @@ export class SlackBot {
 
     private async lookupToken(teamID: string): Promise<string> {
         const auth = await this.dataManager.fetchSlackAuth(teamID);
-        return auth.access_token;
+        return auth.bot.bot_access_token;
     }
 
     private postMessage(authToken: string, channel: string, message: string, callback: () => void): void {
