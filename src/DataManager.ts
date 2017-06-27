@@ -2,11 +2,13 @@ import * as aws from "aws-sdk";
 
 export class DataManager {
     private tokenCache: {[id: string]: any};
+    private userCache: {[id: string]: any};
     private dynamoDB: AWS.DynamoDB;
     private documentClient: AWS.DynamoDB.DocumentClient;
 
     public constructor() {
         this.tokenCache = {};
+        this.userCache = {};
     }
 
     public createSlackAuthTable() {
@@ -118,7 +120,7 @@ export class DataManager {
         return new Promise<void>(async (resolve, reject) => {
             if (teamID in this.tokenCache) {
                 console.log("AuthToken FoundInCache");
-                resolve(this.tokenCache.teamID);
+                resolve(this.tokenCache[teamID]);
                 return;
             }
 
@@ -134,6 +136,7 @@ export class DataManager {
                 if (error) {
                     reject(error);
                 } else {
+                    this.tokenCache[teamID] = result.Item;
                     resolve(result.Item);
                 }
             });
@@ -142,9 +145,16 @@ export class DataManager {
 
     public fetchSlackUser(userID: string, teamID: string): Promise<any>  {
         return new Promise<void>(async (resolve, reject) => {
+            const userKey = (userID + teamID);
+            if (userKey in this.userCache) {
+                console.log("User FoundInCache");
+                resolve(this.userCache[userKey]);
+                return;
+            }
+
             const params = {
                 Key: {
-                    user_id: (userID + teamID),
+                    user_id: userKey,
                 },
                 TableName: "SlackUser",
             };
@@ -153,6 +163,7 @@ export class DataManager {
                 if (error) {
                     reject(error);
                 } else {
+                    this.userCache[userKey] = result.Item;
                     resolve(result.Item);
                 }
             });
