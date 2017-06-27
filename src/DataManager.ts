@@ -163,7 +163,9 @@ export class DataManager {
                 if (error) {
                     reject(error);
                 } else {
-                    this.userCache[userKey] = result.Item;
+                    if (result.Item) {
+                        this.userCache[userKey] = result.Item;
+                    }
                     resolve(result.Item);
                 }
             });
