@@ -26,7 +26,7 @@ export class SlackBot {
                 this.handleDirectMessage(slackMessage);
             } else {
                 const message = slackEvent.text;
-                if (message.toLowerCase().indexOf("silentecho") !== -1) {
+                if (message.toLowerCase().startsWith("alexa") !== -1) {
                     this.handleChannelMessage(slackMessage);
                 }
             }
