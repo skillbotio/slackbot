@@ -56,7 +56,7 @@ export class SlackBot {
     private async handleChannelMessage(slackMessage: any): Promise<void> {
         const slackToken = await this.lookupSlackToken(slackMessage);
         const userToken = process.env.GENERIC_USER_TOKEN;
-        this.handleMessage(slackMessage, slackToken, userToken);
+        this.handleMessage(slackMessage, slackToken, userToken as string);
     }
 
     private async handleMessage(slackMessage: any, slackToken: string, userToken: string): Promise<void> {
