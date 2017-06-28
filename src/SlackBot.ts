@@ -24,11 +24,6 @@ export class SlackBot {
             // If this is a direct message
             if (slackEvent.channel.startsWith("D") && slackEvent.user) {
                 this.handleDirectMessage(slackMessage);
-            } else {
-                const message = slackEvent.text;
-                if (message.toLowerCase().startsWith("silentecho") !== -1) {
-                    this.handleChannelMessage(slackMessage);
-                }
             }
         }
     }
