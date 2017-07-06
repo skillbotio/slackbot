@@ -90,7 +90,7 @@ export class DataManager {
         });
     }
 
-    public saveSlackUser(userID: string, teamID: string, avsToken: string): Promise<void>  {
+    public saveSlackUser(teamID: string, userID: string, avsToken: string): Promise<void>  {
         return new Promise<void>(async (resolve, reject) => {
             const client = new aws.DynamoDB.DocumentClient({
                 region: "us-east-1",
@@ -143,9 +143,11 @@ export class DataManager {
         });
     }
 
-    public fetchSlackUser(userID: string, teamID: string): Promise<any>  {
+    public fetchSlackUser(teamID: string, userID: string): Promise<any>  {
         return new Promise<void>(async (resolve, reject) => {
-            const userKey = (userID + teamID);
+            const userKey = (teamID + userID);
+            console.log("Lookup User: " + userKey);
+
             if (userKey in this.userCache) {
                 console.log("User FoundInCache");
                 resolve(this.userCache[userKey]);

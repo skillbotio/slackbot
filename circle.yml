@@ -12,12 +12,10 @@ dependencies:
     - ./hyper --help
 
 test:
-  override:
-    - echo "No tests yet"
 
 deployment:
-  api-dev:
-    branch: /.*/
+  prod:
+    tag: /prod.*/
     commands:
       - docker login -e $DOCKER_EMAIL -u $DOCKER_USER -p $DOCKER_PASS
       - docker build -f docker/Dockerfile -t bespoken/silent-echo-bot:$CIRCLE_BRANCH .
