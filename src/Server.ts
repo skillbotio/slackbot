@@ -18,9 +18,12 @@ export class Server {
         app.use(new SlackRouter().router());
 
         if (process.env.SSL_CERT) {
+            const cert = process.env.SSL_CERT as string;
+            const key = process.env.SSL_KEY as string;
+
             const credentials = {
-                cert: process.env.SSL_CERT.replace(/\\n/g, "\n"),
-                key: process.env.SSL_KEY.replace(/\\n/g, "\n"),
+                cert: cert.replace(/\\n/g, "\n"),
+                key: key.replace(/\\n/g, "\n"),
             };
 
             const httpsServer = https.createServer(credentials, app);

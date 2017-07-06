@@ -37,6 +37,19 @@ export class SlackRouter {
             return;
         });
 
+        router.post("/slack_command", (request: express.Request, response: express.Response) => {
+            const slackEvent = request.body;
+            console.log("SlackMessage: " + JSON.stringify(slackEvent));
+
+            slackBot.onCommand(slackEvent);
+
+            // We respond immediately or we start getting retries
+            response.status(200);
+            response.send();
+            console.log("Response sent");
+            return;
+        });
+
         router.get("/slack_auth", (request: express.Request, response: express.Response) => {
             let url = "https://slack.com/oauth/authorize";
             url += "?client_id=" + process.env.SLACK_CLIENT_ID;

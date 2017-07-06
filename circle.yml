@@ -11,13 +11,9 @@ dependencies:
     - chmod +x hyper
     - ./hyper --help
 
-test:
-  override:
-    - echo "No tests yet"
-
 deployment:
-  api-dev:
-    branch: /.*/
+  prod:
+    tag: /prod.*/
     commands:
       - docker login -e $DOCKER_EMAIL -u $DOCKER_USER -p $DOCKER_PASS
       - docker build -f docker/Dockerfile -t bespoken/silent-echo-bot:$CIRCLE_BRANCH .
@@ -31,6 +27,7 @@ deployment:
         -e AWS_ACCESS_KEY_ID=$AWS_ACCESS_KEY_ID
         -e AWS_SECRET_ACCESS_KEY=$AWS_SECRET_ACCESS_KEY
         -e BASE_URL=https://silentechobot.bespoken.io
+        -e GENERIC_USER_TOKEN=$GENERIC_USER_TOKEN
         -e SLACK_CLIENT_ID=$SLACK_CLIENT_ID
         -e SLACK_CLIENT_SECRET=$SLACK_CLIENT_SECRET
         -e SSL_CERT="$SSL_CERT"

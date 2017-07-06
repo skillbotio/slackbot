@@ -2,11 +2,13 @@ import * as aws from "aws-sdk";
 
 export class DataManager {
     private tokenCache: {[id: string]: any};
+    private userCache: {[id: string]: any};
     private dynamoDB: AWS.DynamoDB;
     private documentClient: AWS.DynamoDB.DocumentClient;
 
     public constructor() {
         this.tokenCache = {};
+        this.userCache = {};
     }
 
     public createSlackAuthTable() {
@@ -88,7 +90,7 @@ export class DataManager {
         });
     }
 
-    public saveSlackUser(userID: string, teamID: string, avsToken: string): Promise<void>  {
+    public saveSlackUser(teamID: string, userID: string, avsToken: string): Promise<void>  {
         return new Promise<void>(async (resolve, reject) => {
             const client = new aws.DynamoDB.DocumentClient({
                 region: "us-east-1",
@@ -118,7 +120,7 @@ export class DataManager {
         return new Promise<void>(async (resolve, reject) => {
             if (teamID in this.tokenCache) {
                 console.log("AuthToken FoundInCache");
-                resolve(this.tokenCache.teamID);
+                resolve(this.tokenCache[teamID]);
                 return;
             }
 
@@ -134,17 +136,27 @@ export class DataManager {
                 if (error) {
                     reject(error);
                 } else {
+                    this.tokenCache[teamID] = result.Item;
                     resolve(result.Item);
                 }
             });
         });
     }
 
-    public fetchSlackUser(userID: string, teamID: string): Promise<any>  {
+    public fetchSlackUser(teamID: string, userID: string): Promise<any>  {
         return new Promise<void>(async (resolve, reject) => {
+            const userKey = (teamID + userID);
+            console.log("Lookup User: " + userKey);
+
+            if (userKey in this.userCache) {
+                console.log("User FoundInCache");
+                resolve(this.userCache[userKey]);
+                return;
+            }
+
             const params = {
                 Key: {
-                    user_id: (userID + teamID),
+                    user_id: userKey,
                 },
                 TableName: "SlackUser",
             };
@@ -153,6 +165,9 @@ export class DataManager {
                 if (error) {
                     reject(error);
                 } else {
+                    if (result.Item) {
+                        this.userCache[userKey] = result.Item;
+                    }
                     resolve(result.Item);
                 }
             });
