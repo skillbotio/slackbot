@@ -11,8 +11,6 @@ dependencies:
     - chmod +x hyper
     - ./hyper --help
 
-test:
-
 deployment:
   prod:
     tag: /prod.*/
