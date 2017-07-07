@@ -11,15 +11,14 @@ export class SlackBot {
         this.messageSet = new Set<string>();
     }
 
-    public async onCommand(slackMessage: any): Promise<void> {
+    public async onCommand(slackMessage: any): Promise<string | void> {
         const command = SlackBotMessage.fromCommand(slackMessage);
         return this.handleMessage(command);
     }
 
-    public async onMessage(slackMessage: any): Promise<void> {
+    public async onMessage(slackMessage: any): Promise<string | void> {
         if (this.messageSet.has(slackMessage.event_id)) {
-            console.log("Already Processed");
-            return;
+            return Promise.resolve("Already processed: " + slackMessage.event_id);
         }
 
         this.messageSet.add(slackMessage.event_id);
@@ -34,7 +33,7 @@ export class SlackBot {
         return auth.bot;
     }
 
-    protected async lookupUser(teamID: string, userID: string): Promise<string|undefined> {
+    protected async lookupUser(teamID: string, userID: string): Promise<string | void> {
         const result = await this.dataManager.fetchSlackUser(teamID, userID);
         if (result) {
             return result.avs_token;
@@ -64,7 +63,7 @@ export class SlackBot {
         });
     }
 
-    private async handleMessage(message: SlackBotMessage): Promise<void> {
+    private async handleMessage(message: SlackBotMessage): Promise<string | void> {
         console.log("Message: " + message.text);
         if (message.isValid()) {
             if (message.isDirect()) {
@@ -74,16 +73,15 @@ export class SlackBot {
             }
         } else {
             console.error("Invalid message received: " + message.rawPayload);
-            return Promise.resolve();
+            return Promise.resolve("Invalid message received: " + message.rawPayload);
         }
 
     }
 
-    private async handleDirectMessage(message: SlackBotMessage): Promise<void> {
+    private async handleDirectMessage(message: SlackBotMessage): Promise<string | void> {
         // We ignore messages that we send ourselves (which have a bot_id
         if (message.type === MessageType.MESSAGE && message.rawPayload.event.bot_id) {
-            console.log("Skipping messages not sent to silentechobot");
-            return Promise.resolve();
+            return Promise.resolve("Skipping messages not sent to bot: " + message.rawPayload.event.bot_id);
         }
 
         const bot = await this.lookupBot(message.teamID);
@@ -109,11 +107,10 @@ export class SlackBot {
         }
     }
 
-    private async handleChannelMessage(slackMessage: SlackBotMessage): Promise<void> {
+    private async handleChannelMessage(slackMessage: SlackBotMessage): Promise<string | void> {
         // If we have the username field on a message, means that we sent it, so ignore
         if (slackMessage.type === MessageType.MESSAGE && slackMessage.rawPayload.event.username) {
-            console.log("Ignore messages that SilentEcho sent");
-            return Promise.resolve();
+            return Promise.resolve("Ignore messages from the bot: " + slackMessage.rawPayload.event.username);
         }
 
         const bot = await this.lookupBot(slackMessage.teamID);
@@ -121,15 +118,14 @@ export class SlackBot {
 
         // If the bot is called in the message, then reply
         if (slackMessage.text.indexOf(bot.bot_user_id) === -1) {
-            console.log("Ignore messages that do not call my name");
-            return Promise.resolve();
+            return Promise.resolve("Ignore messages that do not call bot name: " + bot.bot_user_id);
         }
 
         const userToken = process.env.GENERIC_USER_TOKEN;
-        this.processMessage(slackMessage, bot, userToken as string);
+        return this.processMessage(slackMessage, bot, userToken as string);
     }
 
-    private async processMessage(message: SlackBotMessage, bot: IBot, userToken: string): Promise<void> {
+    private async processMessage(message: SlackBotMessage, bot: IBot, userToken: string): Promise<string | void> {
         const silentEcho = this.newSilentEcho(userToken as string);
         try {
             const result: ISilentResult = await silentEcho.message(message.textClean());
@@ -144,8 +140,10 @@ export class SlackBot {
             }
 
             this.reply(bot, message.channelID, reply);
+            return Promise.resolve();
         } catch (e) {
             console.log("Error calling SilentEchoSDK: " + e);
+            return Promise.reject(e.toString());
         }
     }
 
@@ -158,7 +156,7 @@ export class SlackBot {
     }
 }
 
-interface IBot {
+export interface IBot {
     bot_access_token: string;
     bot_user_id: string;
 }
