@@ -42,6 +42,10 @@ export class SlackBot {
         }
     }
 
+    protected async saveUser(teamID: string, userID: string, token: string): Promise<void> {
+        return await this.dataManager.saveSlackUser(teamID, userID, token);
+    }
+
     protected newSilentEcho(token: string): SilentEcho {
         return new SilentEcho(token);
     }
@@ -94,7 +98,7 @@ export class SlackBot {
         } else {
             // If the message is 36 characters long, with 5 "-"s, then we assume it is a UUID for the user
             if (message.text.length === 36 && message.text.split("-").length === 5) {
-                await this.dataManager.saveSlackUser(message.teamID, message.userID, message.text);
+                await this.saveUser(message.teamID, message.userID, message.text);
                 return this.reply(bot, message.channelID, "Thank you for registering. Speak to Alexa!");
             } else {
                 // Otherwise, we ask them to register
