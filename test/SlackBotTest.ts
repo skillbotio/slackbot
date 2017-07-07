@@ -3,7 +3,7 @@ import {ISilentResult, SilentEcho} from "silent-echo-sdk";
 import {IBot, SlackBot} from "../src/SlackBot";
 
 export class MockSlackBot extends SlackBot {
-    public constructor(private onPostMessage?: (message: string) => void) {
+    public constructor(private onPostMessage?: (message: string | undefined, options: any) => void) {
         super();
     }
 
@@ -34,9 +34,13 @@ export class MockSlackBot extends SlackBot {
         });
     }
 
-    protected postMessage(authToken: string, channel: string, message: string, callback?: () => void): void {
+    protected postMessage(authToken: string,
+                          channel: string,
+                          message: string,
+                          options: any,
+                          callback?: () => void): void {
         if (this.onPostMessage) {
-            this.onPostMessage(message);
+            this.onPostMessage(message, options);
         }
     }
 }
@@ -47,19 +51,68 @@ export class MockSilentEcho extends SilentEcho {
     }
 
     public message(message: string): Promise<ISilentResult> {
-        return Promise.resolve({
-            stream_url: null,
-            transcript: "Hello there",
-            transcript_audio_url: "https://aurl.com/test",
-        });
+        // Emulate different responses from the SilentEcho service
+        if (message === "cardWithImage") {
+            return Promise.resolve({
+                card: {
+                    imageURL: "https://card.com/image",
+                    mainTitle: "MainTitle",
+                    subTitle: "SubTitle",
+                    textField: "TextField",
+                    type: "BodyTemplate1",
+                },
+                raw_json: {},
+                stream_url: null,
+                transcript: "Hello there",
+                transcript_audio_url: "https://aurl.com/test",
+            });
+        } else if (message === "cardWithoutSubtitle") {
+            return Promise.resolve({
+                card: {
+                    imageURL: "https://card.com/image",
+                    mainTitle: "MainTitle",
+                    subTitle: null,
+                    textField: "TextField",
+                    type: "BodyTemplate1",
+                },
+                raw_json: {},
+                stream_url: null,
+                transcript: "Hello there",
+                transcript_audio_url: "https://aurl.com/test",
+            });
+        } else if (message === "cardWithoutImage") {
+            return Promise.resolve({
+                card: {
+                    imageURL: null,
+                    mainTitle: "MainTitle",
+                    subTitle: "SubTitle",
+                    textField: "TextField",
+                    type: "BodyTemplate1",
+                },
+                raw_json: {},
+                stream_url: null,
+                transcript: "Hello there",
+                transcript_audio_url: "https://aurl.com/test",
+            });
+        } else {
+            return Promise.resolve({
+                card: null,
+                raw_json: {},
+                stream_url: null,
+                transcript: "Hello there",
+                transcript_audio_url: "https://aurl.com/test",
+            });
+        }
+
     }
 }
 describe("SlackBotTest", function() {
     describe("#onCommand", () => {
         it("Should handle a direct command", function(done) {
-            const slackBot = new MockSlackBot((message: string) => {
-                console.log("Output: " + message);
-                assert.isTrue(message.indexOf("Hello there") !== -1);
+            const slackBot = new MockSlackBot((message: any, options: any) => {
+                console.log("Options: " + JSON.stringify(options));
+                assert.equal(options.attachments[0].author_name, ":pencil: Transcript");
+                assert.equal(options.attachments[0].text, "Hello there\n<https://aurl.com/test|Link To Audio>");
                 done();
             });
 
@@ -76,13 +129,59 @@ describe("SlackBotTest", function() {
 
             slackBot.onCommand(command);
         });
+
+        it("Should handle a direct command with a card without an image response", function(done) {
+            const slackBot = new MockSlackBot((message: any, options: any) => {
+                console.log("Options: " + JSON.stringify(options));
+                assert.equal(options.attachments[1].author_name, ":card_index: Card");
+                assert.equal(options.attachments[1].text, "TextField");
+                assert.equal(options.attachments[1].title, "MainTitle\nSubTitle");
+                done();
+            });
+
+            const command = "token=QEJufRDfZkbK2MvyfgB5Ofud" +
+                "&team_id=T4HJBFNCS" +
+                "&team_domain=bespoken-team" +
+                "&channel_id=D60DMHG95" +
+                "&channel_name=directmessage" +
+                "&user_id=U4GSZ33U0" +
+                "&user_name=jpk" +
+                "&command=%2Falexa" +
+                "&text=cardWithoutImage" +
+                "&response_url=httpsblahblahblah";
+
+            slackBot.onCommand(command);
+        });
+
+        it("Should handle a direct command with a card without a subtitle", function(done) {
+            const slackBot = new MockSlackBot((message: any, options: any) => {
+                console.log("Options: " + JSON.stringify(options));
+                assert.equal(options.attachments[1].author_name, ":card_index: Card");
+                assert.equal(options.attachments[1].text, "TextField");
+                assert.equal(options.attachments[1].title, "MainTitle");
+                assert.equal(options.attachments[1].image_url, "https://card.com/image");
+                done();
+            });
+
+            const command = "token=QEJufRDfZkbK2MvyfgB5Ofud" +
+                "&team_id=T4HJBFNCS" +
+                "&team_domain=bespoken-team" +
+                "&channel_id=D60DMHG95" +
+                "&channel_name=directmessage" +
+                "&user_id=U4GSZ33U0" +
+                "&user_name=jpk" +
+                "&command=%2Falexa" +
+                "&text=cardWithoutSubtitle" +
+                "&response_url=httpsblahblahblah";
+
+            slackBot.onCommand(command);
+        });
     });
 
     describe("#onMessage", () => {
         it("Should handle a direct message", function(done) {
-            const slackBot = new MockSlackBot((message: string) => {
-                console.log("Output: " + message);
-                assert.isTrue(message.indexOf("Hello there") !== -1);
+            const slackBot = new MockSlackBot((message: any, options: any) => {
+                assert.isTrue(options.attachments[0].text.indexOf("Hello there") !== -1);
                 done();
             });
 
@@ -170,9 +269,9 @@ describe("SlackBotTest", function() {
         });
 
         it("Should handle a channel message with name", function(done) {
-            const slackBot = new MockSlackBot((message: string) => {
+            const slackBot = new MockSlackBot((message: string, options: any) => {
                 console.log("Output: " + message);
-                assert.isTrue(message.indexOf("Hello there") !== -1);
+                assert.isTrue(options.attachments[0].text.indexOf("Hello there") !== -1);
                 done();
             });
 

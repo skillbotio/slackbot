@@ -50,11 +50,15 @@ export class SlackBot {
         return new SilentEcho(token);
     }
 
-    protected postMessage(authToken: string, channel: string, message: any, callback?: () => void): void {
+    protected postMessage(authToken: string,
+                          channel: string,
+                          message: string | undefined,
+                          options: any,
+                          callback?: () => void): void {
         const WebClient = require("@slack/client").WebClient;
 
         const web = new WebClient(authToken);
-        web.chat.postMessage(channel, undefined, message, function(error: string, response: any) {
+        web.chat.postMessage(channel, message, options, function(error: string, response: any) {
             if (error) {
                 console.log("Error:", error);
             } else {
@@ -137,13 +141,13 @@ export class SlackBot {
             const result: ISilentResult = await silentEcho.message(message.textClean());
             console.log("Result: " + JSON.stringify(result));
             const audioURL = result.stream_url || result.transcript_audio_url;
-            const reply = {
+            const options = {
                 attachments: [] as any[],
             };
 
             if (result.transcript) {
                 const text = result.transcript + "\n<" + audioURL + "|Link To Audio>";
-                reply.attachments.push({
+                options.attachments.push({
                     author_name: ":pencil: Transcript",
                     color: "#F7DC6F",
                     text,
@@ -152,7 +156,7 @@ export class SlackBot {
 
             if (result.stream_url) {
                 const text = "<" + audioURL + "|Link To Audio>";
-                reply.attachments.push({
+                options.attachments.push({
                     author_name: ":speaker: Audio Stream",
                     color: "#D0D3D4",
                     text,
@@ -176,10 +180,10 @@ export class SlackBot {
                     card.image_url = result.card.imageURL;
                 }
 
-                reply.attachments.push(card);
+                options.attachments.push(card);
             }
 
-            this.reply(bot, message.channelID, reply);
+            this.reply(bot, message.channelID, undefined, options);
             return Promise.resolve();
         } catch (e) {
             console.log("Error calling SilentEchoSDK: " + e);
@@ -187,9 +191,9 @@ export class SlackBot {
         }
     }
 
-    private reply(bot: IBot, channel: string, replyContents: any): void {
+    private reply(bot: IBot, channel: string, message?: string, options?: any): void {
         try {
-            this.postMessage(bot.bot_access_token as string, channel, replyContents);
+            this.postMessage(bot.bot_access_token as string, channel, message, options);
         } catch (e) {
             console.log("Error calling SilentEchoSDK: " + e);
         }
