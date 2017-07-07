@@ -30,7 +30,7 @@ deployment:
         -e GENERIC_USER_TOKEN=$GENERIC_USER_TOKEN
         -e SILENT_ECHO_URL=https://silentecho-dev.bespoken.io
         -e SLACK_CLIENT_ID=153623532434.203360600754
-        -e SLACK_CLIENT_SECRET=78287b4c03a642dbfc7a31b94f221410
+        -e SLACK_CLIENT_SECRET=$SLACK_CLIENT_SECRET_DEV
         -e SSL_CERT="$SSL_CERT"
         -e SSL_KEY="$SSL_KEY"
         --name silent-echo-bot-dev
@@ -54,7 +54,7 @@ deployment:
         -e AWS_SECRET_ACCESS_KEY=$AWS_SECRET_ACCESS_KEY
         -e BASE_URL=https://silentechobot.bespoken.io
         -e GENERIC_USER_TOKEN=$GENERIC_USER_TOKEN
-        -e SLACK_CLIENT_ID=$SLACK_CLIENT_ID
+        -e SLACK_CLIENT_ID=153623532434.198878128721
         -e SLACK_CLIENT_SECRET=$SLACK_CLIENT_SECRET
         -e SSL_CERT="$SSL_CERT"
         -e SSL_KEY="$SSL_KEY"
