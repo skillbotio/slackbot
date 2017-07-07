@@ -30,7 +30,7 @@ export class SlackBotMessage {
         } else {
             return newText.trim();
         }
-        console.log("NewText: " + newText);
+
         return SlackBotMessage.cleanText(newText);
     }
 
