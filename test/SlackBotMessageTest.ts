@@ -4,16 +4,18 @@ import {SlackBotMessage} from "../src/SlackBotMessage";
 describe("SlackBotMessage", function() {
     describe("#parseCommand()", () => {
         it("Should handle a command", async () => {
-            const command = SlackBotMessage.fromCommand("token=QEJufRDfZkbK2MvyfgB5Ofud" +
-                "&team_id=T4HJBFNCS" +
-                "&team_domain=bespoken-team" +
-                "&channel_id=D60DMHG95" +
-                "&channel_name=directmessage" +
-                "&user_id=U4GSZ33U0" +
-                "&user_name=jpk" +
-                "&command=%2Falexa" +
-                "&text=hi" +
-                "&response_url=httpsblahblahblah") as SlackBotMessage;
+            const command = SlackBotMessage.fromCommand({
+                channel_id: "D60DMHG95",
+                channel_name: "directmessage",
+                command: "/alexa",
+                response_url: "httpsblahblahblah",
+                team_domain: "bespoken-team",
+                team_id: "T4HJBFNCS",
+                text: "hi",
+                token: "QEJufRDfZkbK2MvyfgB5Ofud",
+                user_id: "U4GSZ33U0",
+                user_name: "jpk",
+            }) as SlackBotMessage;
 
             assert.equal(command.channelID, "D60DMHG95");
             assert.equal(command.teamID, "T4HJBFNCS");
@@ -24,16 +26,18 @@ describe("SlackBotMessage", function() {
         });
 
         it ("Should handle long command", async () => {
-            const command = SlackBotMessage.fromCommand(
-                "token=QEJufRDfZkbK2MvyfgB5Ofud&team_id=T4HJBFNCS" +
-                "&team_domain=bespoken-team" +
-                "&channel_id=D60DMHG95" +
-                "&channel_name=directmessage" +
-                "&user_id=U4GSZ33U0" +
-                "&user_name=jpk" +
-                "&command=%2Falexa" +
-                "&text=hi+there+how+are+you" +
-                "&response_url=httpsblahblahblah") as SlackBotMessage;
+            const command = SlackBotMessage.fromCommand({
+                channel_id: "D60DMHG95",
+                channel_name: "directmessage",
+                command: "/alexa",
+                response_url: "httpsblahblahblah",
+                team_domain: "bespoken-team",
+                team_id: "T4HJBFNCS",
+                text: "hi there how are you",
+                token: "QEJufRDfZkbK2MvyfgB5Ofud",
+                user_id: "U4GSZ33U0",
+                user_name: "jpk",
+            }) as SlackBotMessage;
 
             assert.equal(command.text, "hi there how are you");
         });
@@ -86,6 +90,12 @@ describe("SlackBotMessage", function() {
             const message = new SlackBotMessage();
             message.text = "hi <@U65SQ8DE3> there <@U65SQ8DE3> now <@U65SQ8D23> yes";
             assert.equal(message.textClean(), "hi  there  now  yes");
+        });
+
+        it("Clean with name at the end", () => {
+            const message = new SlackBotMessage();
+            message.text = "tell we study billionaires to play next <@U605KD82J>";
+            assert.equal(message.textClean(), "tell we study billionaires to play next");
         });
 
         it("Clean with no names", () => {

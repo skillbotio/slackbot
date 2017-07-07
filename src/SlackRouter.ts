@@ -3,7 +3,7 @@ import * as express from "express";
 import * as http from "http";
 import * as https from "https";
 import {DataManager} from "./DataManager";
-import {SlackBot} from "./SlackBot";
+import {SlackBot, SlackBotReply} from "./SlackBot";
 
 export class SlackRouter {
     public router(): express.Router {
@@ -16,12 +16,14 @@ export class SlackRouter {
         const router = express.Router();
 
         router.use(bodyParser.json());
+        router.use(bodyParser.urlencoded());
+
         const redirectURL = process.env.BASE_URL + "/slack_auth_response";
 
         router.post("/slack_message", (request: express.Request, response: express.Response) => {
             const slackEvent = request.body;
-            console.log("SlackMessage: " + JSON.stringify(slackEvent));
 
+            console.log("SlackMessage: " + JSON.stringify(slackEvent));
             // When registering a URL, need to do challenge handling
             if (slackEvent.challenge) {
                 response.send(slackEvent.challenge);
@@ -39,9 +41,12 @@ export class SlackRouter {
 
         router.post("/slack_command", (request: express.Request, response: express.Response) => {
             const slackEvent = request.body;
-            console.log("SlackMessage: " + JSON.stringify(slackEvent));
+            console.log("ContentType: " + request.header("Content-Type"));
+            console.log("SlackCommand: " + JSON.stringify(slackEvent));
 
-            slackBot.onCommand(slackEvent);
+            slackBot.onCommand(slackEvent).then((reply: SlackBotReply) => {
+                console.log("Error: " + reply.error);
+            });
 
             // We respond immediately or we start getting retries
             response.status(200);
@@ -51,9 +56,10 @@ export class SlackRouter {
         });
 
         router.get("/slack_auth", (request: express.Request, response: express.Response) => {
+            console.log("SlackAuth: " + redirectURL);
             let url = "https://slack.com/oauth/authorize";
             url += "?client_id=" + process.env.SLACK_CLIENT_ID;
-            url += "&scope=bot chat:write:bot";
+            url += "&scope=bot chat:write:bot commands";
             url += "&redirect_url=" + redirectURL;
 
             response.redirect(url);
@@ -79,6 +85,7 @@ export class SlackRouter {
                     console.log("Data: {data}", data);
                     const json = JSON.parse(data);
                     dataManager.saveSlackAuth(json).then(() => {
+                        console.log("Saved Auth Data. Success");
                         response.redirect("/success.html");
                     }).catch((error: Error) => {
                         response.redirect("/error.html");
