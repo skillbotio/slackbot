@@ -12,8 +12,8 @@ dependencies:
     - ./hyper --help
 
 deployment:
-  prod:
-    tag: /prod.*/
+  dev:
+    branch: /.*/
     commands:
       - docker login -e $DOCKER_EMAIL -u $DOCKER_USER -p $DOCKER_PASS
       - docker build -f docker/Dockerfile -t bespoken/silent-echo-bot:$CIRCLE_BRANCH .
@@ -21,6 +21,32 @@ deployment:
       - ./hyper config --accesskey $HYPER_KEY --secretkey $HYPER_SECRET
       - ./hyper login -e $DOCKER_EMAIL -u $DOCKER_USER -p $DOCKER_PASS
       - ./hyper pull bespoken/silent-echo-bot:$CIRCLE_BRANCH
+      - ./hyper rm -f silent-echo-bot-dev || true
+      - >
+        ./hyper run -d
+        -e AWS_ACCESS_KEY_ID=$AWS_ACCESS_KEY_ID
+        -e AWS_SECRET_ACCESS_KEY=$AWS_SECRET_ACCESS_KEY
+        -e BASE_URL=https://silentechobot-dev.bespoken.io
+        -e GENERIC_USER_TOKEN=$GENERIC_USER_TOKEN
+        -e SILENT_ECHO_URL=https://silentecho-dev.bespoken.io
+        -e SLACK_CLIENT_ID=$SLACK_CLIENT_ID
+        -e SLACK_CLIENT_SECRET=$SLACK_CLIENT_SECRET
+        -e SSL_CERT="$SSL_CERT"
+        -e SSL_KEY="$SSL_KEY"
+        --name silent-echo-bot-dev
+        --size s3
+        -P bespoken/silent-echo-bot:$CIRCLE_BRANCH
+      - ./hyper fip attach -f 199.245.58.199 silent-echo-bot-dev
+
+  prod:
+    tag: /prod.*/
+    commands:
+      - docker login -e $DOCKER_EMAIL -u $DOCKER_USER -p $DOCKER_PASS
+      - docker build -f docker/Dockerfile -t bespoken/silent-echo-bot:$CIRCLE_TAG .
+      - docker push bespoken/silent-echo-bot:$CIRCLE_TAG
+      - ./hyper config --accesskey $HYPER_KEY --secretkey $HYPER_SECRET
+      - ./hyper login -e $DOCKER_EMAIL -u $DOCKER_USER -p $DOCKER_PASS
+      - ./hyper pull bespoken/silent-echo-bot:$CIRCLE_TAG
       - ./hyper rm -f silent-echo-bot || true
       - >
         ./hyper run -d
@@ -34,6 +60,5 @@ deployment:
         -e SSL_KEY="$SSL_KEY"
         --name silent-echo-bot
         --size s4
-        --restart=always
-        -P bespoken/silent-echo-bot:$CIRCLE_BRANCH
+        -P bespoken/silent-echo-bot:$CIRCLE_TAG
       - ./hyper fip attach -f 199.245.56.196 silent-echo-bot

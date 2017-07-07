@@ -82,9 +82,9 @@ export class SlackBot {
     }
 
     private async handleDirectMessage(message: SlackBotMessage): Promise<SlackBotReply> {
-        // We ignore messages that we send ourselves (which have a bot_id
+        // We ignore messages that we send ourselves (which have a bot_id in direct messages)
         if (message.type === MessageType.MESSAGE && message.rawPayload.event.bot_id) {
-            const error = SlackBotReply.Error("Skipping messages not sent to bot: " + message.rawPayload.event.bot_id);
+            const error = SlackBotReply.Error("Ignoring messages from the bot: " + message.rawPayload.event.bot_id);
             return Promise.resolve(error);
         }
 
