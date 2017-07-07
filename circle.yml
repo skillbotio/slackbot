@@ -34,7 +34,7 @@ deployment:
         -e SSL_CERT="$SSL_CERT"
         -e SSL_KEY="$SSL_KEY"
         --name silent-echo-bot-dev
-        --size s3
+        --size s4
         -P bespoken/silent-echo-bot:$CIRCLE_BRANCH
       - ./hyper fip attach -f 199.245.58.199 silent-echo-bot-dev
 

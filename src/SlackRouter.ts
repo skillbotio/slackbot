@@ -85,6 +85,7 @@ export class SlackRouter {
                     console.log("Data: {data}", data);
                     const json = JSON.parse(data);
                     dataManager.saveSlackAuth(json).then(() => {
+                        console.log("Saved Auth Data. Success");
                         response.redirect("/success.html");
                     }).catch((error: Error) => {
                         response.redirect("/error.html");
