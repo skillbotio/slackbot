@@ -56,6 +56,7 @@ export class SlackRouter {
         });
 
         router.get("/slack_auth", (request: express.Request, response: express.Response) => {
+            console.log("SlackAuth: " + redirectURL);
             let url = "https://slack.com/oauth/authorize";
             url += "?client_id=" + process.env.SLACK_CLIENT_ID;
             url += "&scope=bot chat:write:bot commands";
