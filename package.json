@@ -9,6 +9,11 @@
   "files": [
     "lib/src/*.js"
   ],
+  "nyc": {
+    "exclude": [
+      "lib/test/**"
+    ]
+  },
   "repository": {
     "type": "git",
     "url": "git://github.com/bespoken/silent-echo-bot.git"
