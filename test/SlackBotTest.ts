@@ -394,6 +394,35 @@ describe("SlackBotTest", function() {
             });
         });
 
+        it("Should ignore join channel messages", function(done) {
+            const slackBot = new MockSlackBot();
+
+            const messageJSON = {
+                api_app_id: "A5URU3SM7",
+                authed_users: [
+                    "U5WCLUTGW",
+                ],
+                event: {
+                    channel: "C5VKJCF52",
+                    event_ts: "1498461089.507055",
+                    text: "<@U605KD82J|silentechodev> has joined the channel",
+                    ts: "1498461089.507055",
+                    type: "message",
+                    user: "U4GSZ33U0",
+                },
+                event_id: "Ev5ZA0GZA6",
+                event_time: 1498461089,
+                team_id: "T4HJBFNCS",
+                token: "xtuQiBe0yjEYiPHlz0t4F2lX",
+                type: "event_callback",
+            };
+
+            slackBot.onMessage(messageJSON).then((reply: SlackBotReply) => {
+                assert.equal(reply.error, "Ignore messages that do not call bot name: U1234567");
+                done();
+            });
+        });
+
         it("Should ignore message from a bot", function(done) {
             const slackBot = new MockSlackBot();
 

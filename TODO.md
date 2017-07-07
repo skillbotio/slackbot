@@ -2,3 +2,4 @@
 - [ ] Implement oauth
 - [ ] Remove message.channels event, for now
 - [ ] Set permission scopes in slack
+- [ ] Ignore this message "<@U605KD82J|silentechodev> has joined the channel"

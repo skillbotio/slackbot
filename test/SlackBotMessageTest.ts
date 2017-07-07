@@ -92,6 +92,12 @@ describe("SlackBotMessage", function() {
             assert.equal(message.textClean(), "hi  there  now  yes");
         });
 
+        it("Clean with name at the end", () => {
+            const message = new SlackBotMessage();
+            message.text = "tell we study billionaires to play next <@U605KD82J>";
+            assert.equal(message.textClean(), "tell we study billionaires to play next");
+        });
+
         it("Clean with no names", () => {
             const message = new SlackBotMessage();
             message.text = "hi there";

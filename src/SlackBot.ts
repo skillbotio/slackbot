@@ -124,7 +124,8 @@ export class SlackBot {
         console.log("ChannelMessage: " + slackMessage.text);
 
         // If the bot is called in the message, then reply
-        if (slackMessage.type === MessageType.MESSAGE && slackMessage.text.indexOf(bot.bot_user_id) === -1) {
+        const botEscapedName = "<@" + bot.bot_user_id + ">";
+        if (slackMessage.type === MessageType.MESSAGE && slackMessage.text.indexOf(botEscapedName) === -1) {
             const error = SlackBotReply.Error("Ignore messages that do not call bot name: " + bot.bot_user_id);
             return Promise.resolve(error);
         }
