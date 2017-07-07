@@ -1,6 +1,7 @@
 import {assert} from "chai";
+import * as dotenv from "dotenv";
 import {ISilentResult, SilentEcho} from "silent-echo-sdk";
-import {IBot, SlackBot} from "../src/SlackBot";
+import {IBot, SlackBot, SlackBotReply} from "../src/SlackBot";
 
 export class MockSlackBot extends SlackBot {
     public constructor(private onPostMessage?: (message: string | undefined, options: any) => void) {
@@ -36,12 +37,12 @@ export class MockSlackBot extends SlackBot {
 
     protected postMessage(authToken: string,
                           channel: string,
-                          message: string,
-                          options: any,
-                          callback?: () => void): void {
+                          message?: string,
+                          options?: any): Promise<SlackBotReply> {
         if (this.onPostMessage) {
             this.onPostMessage(message, options);
         }
+        return Promise.resolve(SlackBotReply.Message(message, options, {}));
     }
 }
 
@@ -94,6 +95,8 @@ export class MockSilentEcho extends SilentEcho {
                 transcript: "Hello there",
                 transcript_audio_url: "https://aurl.com/test",
             });
+        } else if (message === "noReply") {
+            return Promise.resolve({});
         } else {
             return Promise.resolve({
                 card: null,
@@ -107,6 +110,42 @@ export class MockSilentEcho extends SilentEcho {
     }
 }
 describe("SlackBotTest", function() {
+    before(() => {
+        dotenv.config();
+    });
+
+    describe("Integration Test", function() {
+        this.timeout(20000);
+
+        it("Should process a message", function(done) {
+            const message = {
+                api_app_id: "A5ZALHNN6",
+                authed_users: ["U65SQ8DE3"],
+                event: {
+                    channel: "D655524SH",
+                    event_ts: "1499453429.099535",
+                    text: "tell we study billionaires to play next",
+                    ts: "1499453429.099535",
+                    type: "message",
+                    user: "U64VD25GT",
+                },
+                event_id: "Ev66DGAJBZ",
+                event_time: 1499453429,
+                team_id: "T64C0AX7A",
+                token: "jj5RVapcDv8EcehoZ1HavpTx",
+                type: "event_callback",
+            };
+
+            const slackBot = new SlackBot();
+            slackBot.onMessage(message).then((reply: SlackBotReply) => {
+                assert.isUndefined(reply.error);
+                assert.isTrue(reply.slackResponse.ok);
+                console.log("Reply: " + JSON.stringify(reply.slackResponse));
+                done();
+            });
+        });
+    });
+
     describe("#onCommand", () => {
         it("Should handle a direct command", function(done) {
             const slackBot = new MockSlackBot((message: any, options: any) => {
@@ -116,16 +155,18 @@ describe("SlackBotTest", function() {
                 done();
             });
 
-            const command = "token=QEJufRDfZkbK2MvyfgB5Ofud" +
-                "&team_id=T4HJBFNCS" +
-                "&team_domain=bespoken-team" +
-                "&channel_id=D60DMHG95" +
-                "&channel_name=directmessage" +
-                "&user_id=U4GSZ33U0" +
-                "&user_name=jpk" +
-                "&command=%2Falexa" +
-                "&text=hi" +
-                "&response_url=httpsblahblahblah";
+            const command = {
+                channel_id: "D60DMHG95",
+                channel_name: "directmessage",
+                command: "/alexa",
+                response_url: "httpsblahblahblah",
+                team_domain: "bespoken-team",
+                team_id: "T4HJBFNCS",
+                text: "hi",
+                token: "QEJufRDfZkbK2MvyfgB5Ofud",
+                user_id: "U4GSZ33U0",
+                user_name: "jpk",
+            };
 
             slackBot.onCommand(command);
         });
@@ -139,16 +180,18 @@ describe("SlackBotTest", function() {
                 done();
             });
 
-            const command = "token=QEJufRDfZkbK2MvyfgB5Ofud" +
-                "&team_id=T4HJBFNCS" +
-                "&team_domain=bespoken-team" +
-                "&channel_id=D60DMHG95" +
-                "&channel_name=directmessage" +
-                "&user_id=U4GSZ33U0" +
-                "&user_name=jpk" +
-                "&command=%2Falexa" +
-                "&text=cardWithoutImage" +
-                "&response_url=httpsblahblahblah";
+            const command = {
+                channel_id: "D60DMHG95",
+                channel_name: "directmessage",
+                command: "/alexa",
+                response_url: "httpsblahblahblah",
+                team_domain: "bespoken-team",
+                team_id: "T4HJBFNCS",
+                text: "cardWithoutImage",
+                token: "QEJufRDfZkbK2MvyfgB5Ofud",
+                user_id: "U4GSZ33U0",
+                user_name: "jpk",
+            };
 
             slackBot.onCommand(command);
         });
@@ -163,16 +206,40 @@ describe("SlackBotTest", function() {
                 done();
             });
 
-            const command = "token=QEJufRDfZkbK2MvyfgB5Ofud" +
-                "&team_id=T4HJBFNCS" +
-                "&team_domain=bespoken-team" +
-                "&channel_id=D60DMHG95" +
-                "&channel_name=directmessage" +
-                "&user_id=U4GSZ33U0" +
-                "&user_name=jpk" +
-                "&command=%2Falexa" +
-                "&text=cardWithoutSubtitle" +
-                "&response_url=httpsblahblahblah";
+            const command = {
+                channel_id: "D60DMHG95",
+                channel_name: "directmessage",
+                command: "/alexa",
+                response_url: "httpsblahblahblah",
+                team_domain: "bespoken-team",
+                team_id: "T4HJBFNCS",
+                text: "cardWithoutSubtitle",
+                token: "QEJufRDfZkbK2MvyfgB5Ofud",
+                user_id: "U4GSZ33U0",
+                user_name: "jpk",
+            };
+
+            slackBot.onCommand(command);
+        });
+
+        it("Should handle no reply", function(done) {
+            const slackBot = new MockSlackBot((message: any) => {
+                assert.equal(message, "No reply from SilentEcho");
+                done();
+            });
+
+            const command = {
+                channel_id: "D60DMHG95",
+                channel_name: "directmessage",
+                command: "/alexa",
+                response_url: "httpsblahblahblah",
+                team_domain: "bespoken-team",
+                team_id: "T4HJBFNCS",
+                text: "noReply",
+                token: "QEJufRDfZkbK2MvyfgB5Ofud",
+                user_id: "U4GSZ33U0",
+                user_name: "jpk",
+            };
 
             slackBot.onCommand(command);
         });
@@ -321,8 +388,8 @@ describe("SlackBotTest", function() {
                 type: "event_callback",
             };
 
-            slackBot.onMessage(messageJSON).then((s: string) => {
-                assert.equal(s, "Ignore messages that do not call bot name: U1234567");
+            slackBot.onMessage(messageJSON).then((reply: SlackBotReply) => {
+                assert.equal(reply.error, "Ignore messages that do not call bot name: U1234567");
                 done();
             });
         });
@@ -350,8 +417,8 @@ describe("SlackBotTest", function() {
                 type: "event_callback",
             };
 
-            slackBot.onMessage(messageJSON).then((s: string) => {
-                assert.equal(s, "Ignore messages from the bot: SilentEchoBot");
+            slackBot.onMessage(messageJSON).then((s: SlackBotReply) => {
+                assert.equal(s.error, "Ignore messages from the bot: SilentEchoBot");
                 done();
             });
         });
@@ -385,13 +452,13 @@ describe("SlackBotTest", function() {
 
             slackBot.onMessage(messageJSON);
 
-            slackBot.onMessage(messageJSON).then((s: string) => {
-                assert.equal(s, "Already processed: Ev5ZA0GZA6");
+            slackBot.onMessage(messageJSON).then((reply: SlackBotReply) => {
+                assert.equal(reply.error, "Already processed: Ev5ZA0GZA6");
                 errors++;
             });
 
-            slackBot.onMessage(messageJSON).then((s: string) => {
-                assert.equal(s, "Already processed: Ev5ZA0GZA6");
+            slackBot.onMessage(messageJSON).then((reply: SlackBotReply) => {
+                assert.equal(reply.error, "Already processed: Ev5ZA0GZA6");
                 errors++;
             });
 

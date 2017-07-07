@@ -1,4 +1,3 @@
-import * as querystring from "querystring";
 
 export enum MessageType {
     COMMAND,
@@ -6,7 +5,7 @@ export enum MessageType {
 }
 
 export class SlackBotMessage {
-    public static fromCommand(command: string): SlackBotMessage {
+    public static fromCommand(command: any): SlackBotMessage {
         const message = new SlackBotMessage();
         message.type = MessageType.COMMAND;
         message.rawPayload = command;
@@ -55,11 +54,10 @@ export class SlackBotMessage {
     }
 
     private parseCommand(): boolean {
-        const qs = querystring.parse(this.rawPayload);
-        this.channelID = qs.channel_id;
-        this.teamID = qs.team_id;
-        this.text = qs.text;
-        this.userID = qs.user_id;
+        this.channelID = this.rawPayload.channel_id;
+        this.teamID = this.rawPayload.team_id;
+        this.text = this.rawPayload.text;
+        this.userID = this.rawPayload.user_id;
         return true;
     }
 
