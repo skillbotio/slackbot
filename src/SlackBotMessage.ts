@@ -23,9 +23,17 @@ export class SlackBotMessage {
 
     private static cleanText(text: string): string {
         let newText = text;
-        if (text.indexOf("<@") !== -1) {
-            newText = text.substring(0, text.indexOf("<@"));
-            newText += text.substring(text.indexOf(">") + 1, text.length);
+        const openBracketIndex = text.indexOf("<");
+        if (openBracketIndex !== -1) {
+            const closeBracketIndex = text.indexOf(">", openBracketIndex);
+
+            if (closeBracketIndex !== -1) {
+                newText = text.substring(0, openBracketIndex);
+                newText += text.substring(closeBracketIndex + 1, text.length);
+            } else {
+                return newText;
+            }
+
         } else {
             return newText.trim();
         }

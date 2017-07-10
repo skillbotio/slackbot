@@ -121,7 +121,7 @@ export class SlackBot {
         }
 
         const bot = await this.lookupBot(slackMessage.teamID);
-        console.log("ChannelMessage: " + slackMessage.text);
+        console.log("ChannelMessage: " + slackMessage.textClean());
 
         // If the bot is called in the message, then reply
         const botEscapedName = "<@" + bot.bot_user_id + ">";

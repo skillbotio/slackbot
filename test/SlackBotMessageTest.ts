@@ -103,5 +103,17 @@ describe("SlackBotMessage", function() {
             message.text = "hi there";
             assert.equal(message.textClean(), "hi there");
         });
+
+        it("Clean with single bracket", () => {
+            const message = new SlackBotMessage();
+            message.text = "hi < there";
+            assert.equal(message.textClean(), "hi < there");
+        });
+
+        it("Clean message with channel name", () => {
+            const message = new SlackBotMessage();
+            message.text = "<!here|@here> Please give <@U605KD82J> a try";
+            assert.equal(message.textClean(), "Please give  a try");
+        });
     });
 });
