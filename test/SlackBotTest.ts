@@ -81,6 +81,20 @@ export class MockSilentEcho extends SilentEcho {
                 transcript: "Hello there",
                 transcript_audio_url: "https://aurl.com/test",
             });
+        } else if (message === "cardWithoutMaintitle") {
+            return Promise.resolve({
+                card: {
+                    imageURL: "https://card.com/image",
+                    mainTitle: null as any,
+                    subTitle: "SubTitle",
+                    textField: "TextField",
+                    type: "BodyTemplate1",
+                },
+                raw_json: {},
+                stream_url: null,
+                transcript: "Hello there",
+                transcript_audio_url: "https://aurl.com/test",
+            });
         } else if (message === "cardWithoutImage") {
             return Promise.resolve({
                 card: {
@@ -214,6 +228,32 @@ describe("SlackBotTest", function() {
                 team_domain: "bespoken-team",
                 team_id: "T4HJBFNCS",
                 text: "cardWithoutSubtitle",
+                token: "QEJufRDfZkbK2MvyfgB5Ofud",
+                user_id: "U4GSZ33U0",
+                user_name: "jpk",
+            };
+
+            slackBot.onCommand(command);
+        });
+
+        it("Should handle a direct command with a card with a subtitle but no main title", function(done) {
+            const slackBot = new MockSlackBot((message: any, options: any) => {
+                console.log("Options: " + JSON.stringify(options));
+                assert.equal(options.attachments[1].author_name, ":card_index: Card");
+                assert.equal(options.attachments[1].text, "TextField");
+                assert.equal(options.attachments[1].title, "SubTitle");
+                assert.equal(options.attachments[1].image_url, "https://card.com/image");
+                done();
+            });
+
+            const command = {
+                channel_id: "D60DMHG95",
+                channel_name: "directmessage",
+                command: "/alexa",
+                response_url: "httpsblahblahblah",
+                team_domain: "bespoken-team",
+                team_id: "T4HJBFNCS",
+                text: "cardWithoutMaintitle",
                 token: "QEJufRDfZkbK2MvyfgB5Ofud",
                 user_id: "U4GSZ33U0",
                 user_name: "jpk",
