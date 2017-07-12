@@ -167,17 +167,30 @@ export class SlackBot {
             }
 
             if (result.card) {
-                let title = result.card.mainTitle;
+                let title;
+
+                // We see cases where either mainTitle or subTitle is null, as well as both are
+                if (result.card.mainTitle) {
+                    title = result.card.mainTitle;
+                }
+
                 if (result.card.subTitle) {
-                    title += "\n" + result.card.subTitle;
+                    if (title) {
+                        title += "\n" + result.card.subTitle;
+                    } else {
+                        title = result.card.subTitle;
+                    }
                 }
 
                 const card: any = {
                     author_name: ":card_index: Card",
                     color: "#ccf2ff",
                     text: result.card.textField,
-                    title,
                 };
+
+                if (title) {
+                    card.title = title;
+                }
 
                 if (result.card.imageURL) {
                     card.image_url = result.card.imageURL;
