@@ -104,9 +104,11 @@ export class SlackBot {
                     "Thank you for registering. Speak to Alexa!");
             } else {
                 // Otherwise, we ask them to register
+                const registerURL = "https://silentecho.bespoken.io/link_account?token=true"
+                    + "&slack=" + (message.teamID + message.userID);
                 const reply = "You have not registered with Silent Echo yet. " +
-                    "To register, just <https://silentecho.bespoken.io/link_account?token=true|click here>\n" +
-                    "Follow the steps, then *copy and paste the token into this chat*.\n" +
+                    "To register, just <" + registerURL + "|click here>\n" +
+                    "Follow the steps, then come back here!\n" +
                     "Questions? Here is our <https://silentecho.bespoken.io/faq|FAQ>";
                 return this.postMessage(bot.bot_access_token, message.channelID, reply);
             }
