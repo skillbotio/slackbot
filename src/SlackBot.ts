@@ -107,8 +107,8 @@ export class SlackBot {
                 const registerURL = "https://silentecho.bespoken.io/link_account?token=true"
                     + "&slack=" + (message.teamID + message.userID);
                 const reply = "You have not registered with Silent Echo yet. " +
-                    "To register, just <" + registerURL + "|click here>\n" +
-                    "Follow the steps, then come back here!\n" +
+                    "To register, <" + registerURL + "|just click here!>\n" +
+                    "Follow the steps, then come back.\n" +
                     "Questions? Here is our <https://silentecho.bespoken.io/faq|FAQ>";
                 return this.postMessage(bot.bot_access_token, message.channelID, reply);
             }
