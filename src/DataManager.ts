@@ -99,7 +99,7 @@ export class DataManager {
             const params = {
                 Item: {
                     avs_token: avsToken,
-                    user_id: (userID + teamID),
+                    user_id: (teamID + userID),
                 },
                 TableName: "SlackUser",
             };
