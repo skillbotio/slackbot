@@ -40,7 +40,7 @@ export class TwitterBot {
         });
     }
 
-    public async handleTweet(tweet: any) {
+    public async handleTweet(tweet: any): Promise<any> {
         const silentEcho = new SilentEcho(process.env.GENERIC_USER_TOKEN);
         silentEcho.baseURL = process.env.SILENT_ECHO_URL || "https://silentecho.bespoken.io";
         silentEcho.baseURL += "/process";
@@ -58,11 +58,9 @@ export class TwitterBot {
                 replyMessage = "@" + username + " " + shortTranscript + " " + result.transcript_audio_url;
             }
 
-            if (result.card && result.card.imageURL) {
-                replyMessage += " " + result.card.imageURL;
-            }
-
-            if (replyMessage) {
+            if (replyMessage && result.card && result.card.imageURL) {
+                return this.postStatusWithImageURL(replyMessage, result.card.imageURL);
+            } else if (replyMessage) {
                 this.twit.post("statuses/update", {status: replyMessage}, function(err, data, response) {
                     console.log(data);
                 });
@@ -137,33 +135,35 @@ export class TwitterBot {
         // }
     }
 
-    public async postMediaFromURL(mediaURL: string) {
+    public async postStatusWithImageURL(message: string, mediaURL: string): Promise<any> {
         const base64 = await BotUtil.urlToBase64(mediaURL);
-        this.postMedia(base64);
+        return this.postStatusWithImageBase64(message, base64);
     }
 
-    public postMedia(mediaDataEncoded: string) {
-        const self = this;
-        this.twit.post("media/upload", {
-            media_data: mediaDataEncoded,
-        }, function(err, data: any, response) {
-            // now we can assign alt text to the media, for use by screen readers and
-            // other text-based presentations and interpreters
-            const mediaIdStr = data.media_id_string;
-            const altText = "Small flowers in a planter on a sunny balcony, blossoming.";
-            const metaParams = {
-                alt_text: {
-                    text: altText,
-                },
-                media_id: mediaIdStr,
-            };
+    public postStatusWithImageBase64(message: string, mediaDataEncoded: string): Promise<any> {
+        return new Promise((resolve, reject) => {
+            const self = this;
+            this.twit.post("media/upload", {
+                media_data: mediaDataEncoded,
+            }, function(err, data: any, response) {
+                // now we can assign alt text to the media, for use by screen readers and
+                // other text-based presentations and interpreters
+                const mediaIdStr = data.media_id_string;
+                const altText = "Small flowers in a planter on a sunny balcony, blossoming.";
+                const metaParams = {
+                    alt_text: {
+                        text: altText,
+                    },
+                    media_id: mediaIdStr,
+                };
 
-            self.twit.post("media/metadata/create", metaParams, function() {
-                console.log("posted metadata");
-                const params = { status: "loving life #nofilter", media_ids: [mediaIdStr] };
+                self.twit.post("media/metadata/create", metaParams, function() {
+                    console.log("posted metadata");
+                    const params = { status: message, media_ids: [mediaIdStr] };
 
-                self.twit.post("statuses/update", params, function(err3: any, data3: any) {
-                    console.log(data3);
+                    self.twit.post("statuses/update", params, function(statusError: any, statusData: any) {
+                        resolve(statusData);
+                    });
                 });
             });
         });

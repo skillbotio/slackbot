@@ -46,12 +46,16 @@ describe("TwitterBot", function() {
 
             const base64data = new Buffer(data).toString("base64");
             console.log("Base64: " + base64data);
-            bot.postMedia(base64data);
+            bot.postStatusWithImageBase64("Hi there", base64data).then(() => {
+                done();
+            });
         });
 
         it("Post media URL to twitter", function(done) {
             const bot = new MockTwitterBot();
-            bot.postMediaFromURL("https://pbs.twimg.com/media/DEuhI66XoAAW7LO.jpg:large");
+            bot.postStatusWithImageURL("Hi there", "https://pbs.twimg.com/media/DEuhI66XoAAW7LO.jpg:large").then(() => {
+                done();
+            });
         });
     });
 
