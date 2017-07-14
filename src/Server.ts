@@ -2,6 +2,7 @@ import * as bodyParser from "body-parser";
 import * as express from "express";
 import * as https from "https";
 import {SlackRouter} from "./SlackRouter";
+import {TwitterRouter} from "./TwitterRouter";
 
 export class Server {
     public start(): void {
@@ -16,6 +17,8 @@ export class Server {
         app.use(express.static("static"));
 
         app.use(new SlackRouter().router());
+
+        app.use(new TwitterRouter().router());
 
         if (process.env.SSL_CERT) {
             const cert = process.env.SSL_CERT as string;
