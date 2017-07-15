@@ -82,6 +82,16 @@ describe("TwitterBot", function() {
             const cleaned = TwitterBot.cleanMessage("hi @silentechobot there my @jpkbst friend");
             assert.equal(cleaned, "hi there my friend");
         });
+
+        it("Clean message with username at the end and ?", () => {
+            const cleaned = TwitterBot.cleanMessage("what time is it @silentechobot?");
+            assert.equal(cleaned, "what time is it");
+        });
+
+        it("Clean message with username at the end and ? plus more", () => {
+            const cleaned = TwitterBot.cleanMessage("what time is it @silentechobot? right now");
+            assert.equal(cleaned, "what time is it right now");
+        });
     });
 });
 

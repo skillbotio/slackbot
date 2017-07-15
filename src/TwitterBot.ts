@@ -9,7 +9,10 @@ export class TwitterBot {
         const atIndex = message.indexOf("@");
         let newMessage = message;
         if (atIndex !== -1) {
-            const endName = message.indexOf(" ", atIndex);
+            let endName = message.indexOf(" ", atIndex);
+            if (endName === -1) {
+                endName = message.length;
+            }
             newMessage = message.substring(0, atIndex);
             newMessage += message.substring(endName + 1);
 
