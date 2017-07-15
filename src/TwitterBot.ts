@@ -1,6 +1,8 @@
 import {ISilentResult, SilentEcho} from "silent-echo-sdk";
 import * as Twit from "twit";
 import {BotUtil} from "./BotUtil";
+import {TweetManager} from "./TweetManager";
+import {TwitterPost} from "./TwitterPost";
 
 export class TwitterBot {
     public static cleanMessage(message: string): string {
@@ -51,88 +53,26 @@ export class TwitterBot {
             const result: ISilentResult = await silentEcho.message(cleanedMessage);
             console.log("Got a reply: " + result.transcript);
 
+            const post = new TwitterPost(tweet, result);
+            TweetManager.Instance.add(post);
             const username = tweet.user.screen_name;
-            let replyMessage = null;
-            if (result.transcript) {
-                const shortTranscript = result.transcript.substring(0, 50);
-                replyMessage = "@" + username + " " + shortTranscript + " " + result.transcript_audio_url;
-            }
+            const replyMessage = "Reply from Alexa: " + post.toURL() + " @" + username + " ";
 
-            if (replyMessage && result.card && result.card.imageURL) {
-                return this.postStatusWithImageURL(replyMessage, result.card.imageURL);
-            } else if (replyMessage) {
-                this.twit.post("statuses/update", {status: replyMessage}, function(err, data, response) {
-                    console.log(data);
+            const self = this;
+            return new Promise((resolve, reject) => {
+                const params = { status: replyMessage };
+                self.twit.post("statuses/update", params, function(statusError: any, statusData: any) {
+                    if (statusError) {
+                        reject(statusError);
+                    } else {
+                        resolve(statusData);
+                    }
                 });
-            }
-
+            });
         } catch (e) {
             console.log("Error: " + e);
+            throw e;
         }
-
-            // console.log("Result: " + JSON.stringify(result));
-            // const audioURL = result.stream_url || result.transcript_audio_url;
-            // const options = {
-            //     attachments: [] as any[],
-            // };
-            //
-            // if (result.transcript) {
-            //     const text = result.transcript + "\n<" + audioURL + "|Link To Audio>";
-            //     options.attachments.push({
-            //         author_name: ":pencil: Transcript",
-            //         color: "#F7DC6F",
-            //         text,
-            //     });
-            // }
-            //
-            // if (result.stream_url) {
-            //     const text = "<" + audioURL + "|Link To Audio>";
-            //     options.attachments.push({
-            //         author_name: ":speaker: Audio Stream",
-            //         color: "#D0D3D4",
-            //         text,
-            //     });
-            // }
-            //
-            // if (result.card) {
-            //     let title;
-            //
-            //     // We see cases where either mainTitle or subTitle is null, as well as both are
-            //     if (result.card.mainTitle) {
-            //         title = result.card.mainTitle;
-            //     }
-            //
-            //     if (result.card.subTitle) {
-            //         if (title) {
-            //             title += "\n" + result.card.subTitle;
-            //         } else {
-            //             title = result.card.subTitle;
-            //         }
-            //     }
-            //
-            //     const card: any = {
-            //         author_name: ":card_index: Card",
-            //         color: "#ccf2ff",
-            //         text: result.card.textField,
-            //     };
-            //
-            //     if (title) {
-            //         card.title = title;
-            //     }
-            //
-            //     if (result.card.imageURL) {
-            //         card.image_url = result.card.imageURL;
-            //     }
-            //
-            //     options.attachments.push(card);
-            // }
-            //
-            // let replyMessage: any;
-            // if (!result.transcript && !result.stream_url) {
-            //     replyMessage = "No reply from SilentEcho";
-            // }
-
-        // }
     }
 
     public async postStatusWithImageURL(message: string, mediaURL: string): Promise<any> {
