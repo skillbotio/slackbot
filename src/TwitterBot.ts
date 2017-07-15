@@ -22,10 +22,10 @@ export class TwitterBot {
 
     public constructor() {
         this.twit = new Twit({
-            access_token: process.env.ACCESS_TOKEN,
-            access_token_secret: process.env.ACCESS_TOKEN_SECRET,
-            consumer_key: process.env.CONSUMER_KEY,
-            consumer_secret: process.env.CONSUMER_SECRET,
+            access_token: process.env.ACCESS_TOKEN as string,
+            access_token_secret: process.env.ACCESS_TOKEN_SECRET as string,
+            consumer_key: process.env.CONSUMER_KEY as string,
+            consumer_secret: process.env.CONSUMER_SECRET as string,
             timeout_ms: 60 * 1000,  // optional HTTP request timeout to apply to all requests.
         });
     }
@@ -43,7 +43,7 @@ export class TwitterBot {
     }
 
     public async handleTweet(tweet: any): Promise<any> {
-        const silentEcho = new SilentEcho(process.env.GENERIC_USER_TOKEN);
+        const silentEcho = new SilentEcho(process.env.GENERIC_USER_TOKEN as string);
         silentEcho.baseURL = process.env.SILENT_ECHO_URL || "https://silentecho.bespoken.io";
         silentEcho.baseURL += "/process";
         console.log("URL: " + silentEcho.baseURL);
