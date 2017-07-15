@@ -34,10 +34,13 @@ describe("TwitterBot", function() {
     });
     this.timeout(20000);
 
-    describe("mockMessage()", () => {
+    describe("mockMessage()", function() {
         it("Handle a message to silentecho", function(done) {
             const bot = new MockTwitterBot();
             bot.start();
+            setTimeout(function() {
+                done();
+            }, 10000);
         });
 
         it("Post media to twitter", function(done) {

@@ -26,7 +26,7 @@ describe("TwitterPost", function() {
 
             const html = post.toHTML();
             console.log("HTML: " + html);
-
+            done();
         });
     });
 

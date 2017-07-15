@@ -1,4 +1,4 @@
-import * as request from "request-promise-native";
+const request = require("request-promise-native");
 
 export class BotUtil {
 
