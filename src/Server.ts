@@ -7,7 +7,7 @@ import {TwitterRouter} from "./TwitterRouter";
 export class Server {
     public start(): void {
         // console.log("CERT:" + process.env.SSL_CERT + " CLIENT: " + process.env.SLACK_CLIENT_ID);
-        const serverPort = process.env.SSL_CERT ? 443 : 3000;
+        const serverPort = process.env.SSL_CERT ? 443 : 3001;
         const app = express();
 
         // JSON Parser

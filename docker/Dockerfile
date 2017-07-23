@@ -18,7 +18,7 @@ COPY static/ ./static/
 
 COPY *.json ./
 
-RUN npm install
+RUN npm install --quiet
 
 RUN npm run tsc
 

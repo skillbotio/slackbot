@@ -19,6 +19,7 @@ export class SlackRouter {
         router.use(bodyParser.urlencoded());
 
         const redirectURL = process.env.BASE_URL + "/slack_auth_response";
+        const slackURL = "https://silentecho.bespoken.io";
 
         router.post("/slack_message", (request: express.Request, response: express.Response) => {
             const slackEvent = request.body;
@@ -57,12 +58,12 @@ export class SlackRouter {
 
         router.get("/slack_auth", (request: express.Request, response: express.Response) => {
             console.log("SlackAuth: " + redirectURL);
-            let url = "https://slack.com/oauth/authorize";
-            url += "?client_id=" + process.env.SLACK_CLIENT_ID;
-            url += "&scope=bot chat:write:bot";
-            url += "&redirect_url=" + redirectURL;
+            // let url = "https://slack.com/oauth/authorize";
+            // url += "?client_id=" + process.env.SLACK_CLIENT_ID;
+            // url += "&scope=bot chat:write:bot";
+            // url += "&redirect_url=" + redirectURL;
 
-            response.redirect(url);
+            response.redirect(slackURL);
         });
 
         router.get("/slack_auth_response", (request: express.Request, response: express.Response) => {
