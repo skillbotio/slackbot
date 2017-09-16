@@ -1,19 +1,16 @@
-import {ISilentResult, SilentEcho} from "silent-echo-sdk";
+import {SkillBotClient} from "skill-bot-client";
 import {DataManager} from "./DataManager";
 import {MessageType, SlackBotMessage} from "./SlackBotMessage";
 
 export class SlackBot {
     private dataManager: DataManager;
     private messageSet: Set<string>;
+    private clientToken: string; // Unique token for this particular slack app
 
     public constructor() {
         this.dataManager = new DataManager();
         this.messageSet = new Set<string>();
-    }
-
-    public async onCommand(slackMessage: any): Promise<SlackBotReply> {
-        const command = SlackBotMessage.fromCommand(slackMessage);
-        return this.handleMessage(command);
+        this.clientToken = process.env.SLACK_CLIENT_TOKEN; // We get this from the api.slack.com basic info page
     }
 
     public async onMessage(slackMessage: any): Promise<SlackBotReply> {
@@ -25,29 +22,12 @@ export class SlackBot {
         return this.handleMessage(SlackBotMessage.fromMessage(slackMessage));
     }
 
-    protected async lookupBot(teamID: string): Promise<IBot> {
-        const auth = await this.dataManager.fetchSlackAuth(teamID);
+    protected async lookupBot(token: string, teamID: string): Promise<IBot> {
+        const auth = await this.dataManager.fetchSlackAuth(token, teamID);
         console.log("Looked up token: " + teamID
             + " Token: " + auth.bot.bot_access_token
             + " UserID: " + auth.bot.bot_user_id);
         return auth.bot;
-    }
-
-    protected async lookupUser(teamID: string, userID: string): Promise<string | void> {
-        const result = await this.dataManager.fetchSlackUser(teamID, userID);
-        if (result) {
-            return result.avs_token;
-        } else {
-            return undefined;
-        }
-    }
-
-    protected async saveUser(teamID: string, userID: string, token: string): Promise<void> {
-        return await this.dataManager.saveSlackUser(teamID, userID, token);
-    }
-
-    protected newSilentEcho(token: string): SilentEcho {
-        return new SilentEcho(token);
     }
 
     protected postMessage(authToken: string,
@@ -88,9 +68,9 @@ export class SlackBot {
             return Promise.resolve(error);
         }
 
-        const bot = await this.lookupBot(message.teamID);
+        const bot = await this.lookupBot(this.clientToken, message.teamID);
         console.log("TeamID: " + message.teamID + " UserID: " + message.userID);
-        const userToken = await this.lookupUser(message.teamID, message.userID);
+        const userToken = message.userKey();
 
         // If we already have registered this user, we process the message
         if (userToken) {
@@ -98,7 +78,6 @@ export class SlackBot {
         } else {
             // If the message is 36 characters long, with 5 "-"s, then we assume it is a UUID for the user
             if (message.text.length === 36 && message.text.split("-").length === 5) {
-                await this.saveUser(message.teamID, message.userID, message.text);
                 return this.postMessage(bot.bot_access_token,
                     message.channelID,
                     "Thank you for registering. Speak to Alexa!");
@@ -122,7 +101,7 @@ export class SlackBot {
             return Promise.resolve(e);
         }
 
-        const bot = await this.lookupBot(slackMessage.teamID);
+        const bot = await this.lookupBot(slackMessage.appID, slackMessage.teamID);
         console.log("ChannelMessage: " + slackMessage.textClean());
 
         // If the bot is called in the message, then reply
@@ -137,30 +116,21 @@ export class SlackBot {
     }
 
     private async processMessage(message: SlackBotMessage, bot: IBot, userToken: string): Promise<SlackBotReply> {
-        const silentEcho = this.newSilentEcho(userToken as string);
-        silentEcho.baseURL = process.env.SILENT_ECHO_URL || "https://silentecho.bespoken.io";
-        silentEcho.baseURL += "/process";
-        console.log("URL: " + silentEcho.baseURL);
+        const skillBot = new SkillBotClient(process.env.SKILLBOT_URL);
 
         try {
-            const result: ISilentResult = await silentEcho.message(message.textClean());
-            console.log("Result: " + JSON.stringify(result));
-            const audioURL = result.stream_url || result.transcript_audio_url;
-            const options = {
+            const result = await skillBot.message("SLACK", message.userID, message.textClean());
+            console.log("Result: " + JSON.stringify(result, null, 2));
+            const options: any = {
                 attachments: [] as any[],
             };
 
-            if (result.transcript) {
-                const text = result.transcript + "\n<" + audioURL + "|Link To Audio>";
-                options.attachments.push({
-                    author_name: ":pencil: Transcript",
-                    color: "#F7DC6F",
-                    text,
-                });
+            if (result.text) {
+                options.text = result.text;
             }
 
-            if (result.stream_url) {
-                const text = "<" + audioURL + "|Link To Audio>";
+            if (result.streamURL) {
+                const text = "<" + result.streamURL + "|Link To Audio>";
                 options.attachments.push({
                     author_name: ":speaker: Audio Stream",
                     color: "#D0D3D4",
@@ -172,8 +142,8 @@ export class SlackBot {
                 let title;
 
                 // We see cases where either mainTitle or subTitle is null, as well as both are
-                if (result.card.mainTitle) {
-                    title = result.card.mainTitle;
+                if (result.card.title) {
+                    title = result.card.title;
                 }
 
                 if (result.card.subTitle) {
@@ -185,9 +155,8 @@ export class SlackBot {
                 }
 
                 const card: any = {
-                    author_name: ":card_index: Card",
                     color: "#ccf2ff",
-                    text: result.card.textField,
+                    text: result.card.content,
                 };
 
                 if (title) {
@@ -202,8 +171,8 @@ export class SlackBot {
             }
 
             let replyMessage: any;
-            if (!result.transcript && !result.stream_url) {
-                replyMessage = "No reply from SilentEcho";
+            if (!result.text && !result.streamURL) {
+                replyMessage = "No reply from SkillBot";
             }
 
             return this.postMessage(bot.bot_access_token, message.channelID, replyMessage, options);

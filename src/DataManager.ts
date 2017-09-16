@@ -1,191 +1,32 @@
-import * as aws from "aws-sdk";
-
 export class DataManager {
     private tokenCache: {[id: string]: any};
     private userCache: {[id: string]: any};
-    private dynamoDB: AWS.DynamoDB;
-    private documentClient: AWS.DynamoDB.DocumentClient;
+    private dynasty: any;
 
     public constructor() {
         this.tokenCache = {};
         this.userCache = {};
+        this.dynasty = require("dynasty")(this.awsParameters());
     }
 
-    public createSlackAuthTable() {
-        const params = {
-            AttributeDefinitions: [
-                { AttributeName: "team_id", AttributeType: "S" },
-            ],
-            KeySchema: [
-                { AttributeName: "team_id", KeyType: "HASH"},
-            ],
-            ProvisionedThroughput: {
-                ReadCapacityUnits: 1,
-                WriteCapacityUnits: 1,
-            },
-            TableName : "SlackAuth",
-        };
-
-        this.client().createTable(params, function(error: aws.AWSError, data: aws.DynamoDB.Types.CreateTableOutput) {
-            if (error) {
-                if (error.message.startsWith("Table already exists")) {
-                    console.log("Table already created");
-                } else {
-                    console.error("Unable to create table. Error JSON:", JSON.stringify(error, null, 2));
-                }
+    public createSlackAuthTable(): Promise<void> {
+        return this.dynasty.create("SkillBotSlackAuth", { key_schema: { hash: ["key", "string"] } }).catch((e: any) => {
+            if (e.message.indexOf("Table already exists") !== -1) {
+                return Promise.resolve();
             } else {
-                console.log("Created table. Table description JSON:", JSON.stringify(data, null, 2));
+                return Promise.reject(e);
             }
         });
     }
 
-    public createSlackUserTable() {
-        const params = {
-            AttributeDefinitions: [
-                { AttributeName: "user_id", AttributeType: "S" },
-            ],
-            KeySchema: [
-                { AttributeName: "user_id", KeyType: "HASH"},
-            ],
-            ProvisionedThroughput: {
-                ReadCapacityUnits: 1,
-                WriteCapacityUnits: 1,
-            },
-            TableName : "SlackUser",
-        };
-
-        this.client().createTable(params, function(error: aws.AWSError, data: aws.DynamoDB.Types.CreateTableOutput) {
-            if (error) {
-                if (error.message.startsWith("Table already exists: SlackUser")) {
-                    console.log("Table already created");
-                } else {
-                    console.error("Unable to create table. Error JSON:", JSON.stringify(error, null, 2));
-                }
-            } else {
-                console.log("Created table. Table description JSON:", JSON.stringify(data, null, 2));
-            }
-        });
+    public saveSlackAuth(clientToken: string, slackAuth: any): Promise<void>  {
+        slackAuth.key = clientToken + slackAuth.team_id;
+        return this.dynasty.table("SkillBotSlackAuth").insert(slackAuth);
     }
 
-    public saveSlackAuth(slackAuth: any): Promise<void>  {
-        return new Promise<void>(async (resolve, reject) => {
-            const client = new aws.DynamoDB.DocumentClient({
-                region: "us-east-1",
-            });
-
-            const params = {
-                Item: slackAuth,
-                TableName: "SlackAuth",
-            };
-
-            console.time("putObject");
-            client.put(params, (error: Error) => {
-                console.timeEnd("putObject");
-                if (error) {
-                    reject(error);
-                } else {
-                    resolve();
-                }
-            });
-        });
-    }
-
-    public saveSlackUser(teamID: string, userID: string, avsToken: string): Promise<void>  {
-        return new Promise<void>(async (resolve, reject) => {
-            const client = new aws.DynamoDB.DocumentClient({
-                region: "us-east-1",
-            });
-
-            const params = {
-                Item: {
-                    avs_token: avsToken,
-                    user_id: (teamID + userID),
-                },
-                TableName: "SlackUser",
-            };
-
-            console.time("putObject");
-            client.put(params, (error: Error) => {
-                console.timeEnd("putObject");
-                if (error) {
-                    reject(error);
-                } else {
-                    resolve();
-                }
-            });
-        });
-    }
-
-    public fetchSlackAuth(teamID: string): Promise<any>  {
-        return new Promise<void>(async (resolve, reject) => {
-            if (teamID in this.tokenCache) {
-                console.log("AuthToken FoundInCache");
-                resolve(this.tokenCache[teamID]);
-                return;
-            }
-
-            const params = {
-                Key: {
-                    team_id: teamID,
-                },
-                TableName: "SlackAuth",
-            };
-
-            console.time("putObject");
-            this.docClient().get(params, (error: Error, result: any) => {
-                if (error) {
-                    reject(error);
-                } else {
-                    this.tokenCache[teamID] = result.Item;
-                    resolve(result.Item);
-                }
-            });
-        });
-    }
-
-    public fetchSlackUser(teamID: string, userID: string): Promise<any>  {
-        return new Promise<void>(async (resolve, reject) => {
-            const userKey = (teamID + userID);
-            console.log("Lookup User: " + userKey);
-
-            if (userKey in this.userCache) {
-                console.log("User FoundInCache");
-                resolve(this.userCache[userKey]);
-                return;
-            }
-
-            const params = {
-                Key: {
-                    user_id: userKey,
-                },
-                TableName: "SlackUser",
-            };
-
-            this.docClient().get(params, (error: Error, result: any) => {
-                if (error) {
-                    reject(error);
-                } else {
-                    if (result.Item) {
-                        this.userCache[userKey] = result.Item;
-                    }
-                    resolve(result.Item);
-                }
-            });
-        });
-    }
-
-    private client(): AWS.DynamoDB {
-        if (!this.dynamoDB) {
-            this.dynamoDB = new aws.DynamoDB(this.awsParameters());
-        }
-        return this.dynamoDB;
-    }
-
-    private docClient(): AWS.DynamoDB.DocumentClient {
-        if (!this.documentClient) {
-            this.documentClient = new aws.DynamoDB.DocumentClient(this.awsParameters());
-        }
-        return this.documentClient;
+    public fetchSlackAuth(clientToken: string, teamID: string): Promise<any> {
+        const key = clientToken + teamID;
+        return this.dynasty.table("SkillBotSlackAuth").find(key);
     }
 
     private awsParameters(): any {

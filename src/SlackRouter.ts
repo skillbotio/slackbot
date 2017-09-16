@@ -3,13 +3,12 @@ import * as express from "express";
 import * as http from "http";
 import * as https from "https";
 import {DataManager} from "./DataManager";
-import {SlackBot, SlackBotReply} from "./SlackBot";
+import {SlackBot} from "./SlackBot";
 
 export class SlackRouter {
-    public router(): express.Router {
+    public async router(): Promise<express.Router> {
         const dataManager = new DataManager();
-        dataManager.createSlackAuthTable();
-        dataManager.createSlackUserTable();
+        await dataManager.createSlackAuthTable();
 
         const slackBot = new SlackBot();
 
@@ -19,7 +18,6 @@ export class SlackRouter {
         router.use(bodyParser.urlencoded());
 
         const redirectURL = process.env.BASE_URL + "/slack_auth_response";
-        const slackURL = "https://silentecho.bespoken.io";
 
         router.post("/slack_message", (request: express.Request, response: express.Response) => {
             const slackEvent = request.body;
@@ -40,30 +38,14 @@ export class SlackRouter {
             return;
         });
 
-        router.post("/slack_command", (request: express.Request, response: express.Response) => {
-            const slackEvent = request.body;
-            console.log("ContentType: " + request.header("Content-Type"));
-            console.log("SlackCommand: " + JSON.stringify(slackEvent));
-
-            slackBot.onCommand(slackEvent).then((reply: SlackBotReply) => {
-                console.log("Error: " + reply.error);
-            });
-
-            // We respond immediately or we start getting retries
-            response.status(200);
-            response.send();
-            console.log("Response sent");
-            return;
-        });
-
         router.get("/slack_auth", (request: express.Request, response: express.Response) => {
             console.log("SlackAuth: " + redirectURL);
-            // let url = "https://slack.com/oauth/authorize";
-            // url += "?client_id=" + process.env.SLACK_CLIENT_ID;
-            // url += "&scope=bot chat:write:bot";
-            // url += "&redirect_url=" + redirectURL;
+            let url = "https://slack.com/oauth/authorize";
+            url += "?client_id=" + process.env.SLACK_CLIENT_ID;
+            url += "&scope=bot chat:write:bot";
+            url += "&redirect_url=" + redirectURL;
 
-            response.redirect(slackURL);
+            response.redirect(url);
         });
 
         router.get("/slack_auth_response", (request: express.Request, response: express.Response) => {
@@ -85,7 +67,7 @@ export class SlackRouter {
                 accessResponse.on("end", () => {
                     console.log("Data: {data}", data);
                     const json = JSON.parse(data);
-                    dataManager.saveSlackAuth(json).then(() => {
+                    dataManager.saveSlackAuth(process.env.SLACK_CLIENT_TOKEN, json).then(() => {
                         console.log("Saved Auth Data. Success");
                         response.redirect("/success.html");
                     }).catch((error: Error) => {

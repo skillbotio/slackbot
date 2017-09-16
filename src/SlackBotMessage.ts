@@ -5,14 +5,6 @@ export enum MessageType {
 }
 
 export class SlackBotMessage {
-    public static fromCommand(command: any): SlackBotMessage {
-        const message = new SlackBotMessage();
-        message.type = MessageType.COMMAND;
-        message.rawPayload = command;
-        message.valid = message.parseCommand();
-        return message;
-    }
-
     public static fromMessage(json: any): SlackBotMessage {
         const message = new SlackBotMessage();
         message.type = MessageType.MESSAGE;
@@ -41,6 +33,7 @@ export class SlackBotMessage {
         return SlackBotMessage.cleanText(newText);
     }
 
+    public appID: string;
     public channelID: string;
     public rawPayload: any;
     public teamID: string;
@@ -57,16 +50,12 @@ export class SlackBotMessage {
         return this.valid;
     }
 
-    public textClean(): string {
-        return SlackBotMessage.cleanText(this.text);
+    public userKey(): string {
+        return this.appID + this.teamID + this.userID;
     }
 
-    private parseCommand(): boolean {
-        this.channelID = this.rawPayload.channel_id;
-        this.teamID = this.rawPayload.team_id;
-        this.text = this.rawPayload.text;
-        this.userID = this.rawPayload.user_id;
-        return true;
+    public textClean(): string {
+        return SlackBotMessage.cleanText(this.text);
     }
 
     private parseMessage(): boolean {
@@ -74,6 +63,7 @@ export class SlackBotMessage {
             return false;
         }
 
+        this.appID = this.rawPayload.api_app_id;
         this.channelID = this.rawPayload.event.channel;
         this.teamID = this.rawPayload.team_id;
         this.text = this.rawPayload.event.text;
