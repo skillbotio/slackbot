@@ -9,6 +9,7 @@ node_modules/
 
 *.log
 .env
+env.out
 .nyc_output
 coverage/
 
