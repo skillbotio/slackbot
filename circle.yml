@@ -13,4 +13,4 @@ deployment:
   dev:
     branch: /.*/
     commands:
-      - ./deployment.sh slackbot-server dev $CIRCLE_BRANCH 199.245.58.128
+      - ./deployment.sh slackbot-server dev $CIRCLE_BRANCH 199.245.58.128 s4
