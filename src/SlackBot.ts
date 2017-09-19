@@ -10,7 +10,8 @@ export class SlackBot {
     public constructor() {
         this.dataManager = new DataManager();
         this.messageSet = new Set<string>();
-        this.clientToken = process.env.SLACK_CLIENT_TOKEN; // We get this from the api.slack.com basic info page
+        // We get this from the api.slack.com basic info page
+        this.clientToken = process.env.SLACK_CLIENT_TOKEN as string;
     }
 
     public async onMessage(slackMessage: any): Promise<SlackBotReply> {

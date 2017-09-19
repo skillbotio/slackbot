@@ -67,7 +67,7 @@ export class SlackRouter {
                 accessResponse.on("end", () => {
                     console.log("Data: {data}", data);
                     const json = JSON.parse(data);
-                    dataManager.saveSlackAuth(process.env.SLACK_CLIENT_TOKEN, json).then(() => {
+                    dataManager.saveSlackAuth(process.env.SLACK_CLIENT_TOKEN as string, json).then(() => {
                         console.log("Saved Auth Data. Success");
                         response.redirect("/success.html");
                     }).catch((error: Error) => {

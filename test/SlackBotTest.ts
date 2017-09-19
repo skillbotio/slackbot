@@ -1,7 +1,6 @@
 import {assert} from "chai";
 import * as dotenv from "dotenv";
 import * as nock from "nock";
-import {ISilentResult, SilentEcho} from "silent-echo-sdk";
 import {IBot, SlackBot} from "../src/SlackBot";
 
 export class MockSlackBot extends SlackBot {
@@ -13,83 +12,6 @@ export class MockSlackBot extends SlackBot {
     }
 }
 
-export class MockSilentEcho extends SilentEcho {
-    public constructor() {
-        super("TEST");
-    }
-
-    public message(message: string): Promise<ISilentResult> {
-        // Emulate different responses from the SilentEcho service
-        if (message === "cardWithImage") {
-            return Promise.resolve({
-                card: {
-                    imageURL: "https://card.com/image",
-                    mainTitle: "MainTitle",
-                    subTitle: "SubTitle",
-                    textField: "TextField",
-                    type: "BodyTemplate1",
-                },
-                raw_json: {},
-                stream_url: null,
-                transcript: "Hello there",
-                transcript_audio_url: "https://aurl.com/test",
-            });
-        } else if (message === "cardWithoutSubtitle") {
-            return Promise.resolve({
-                card: {
-                    imageURL: "https://card.com/image",
-                    mainTitle: "MainTitle",
-                    subTitle: null,
-                    textField: "TextField",
-                    type: "BodyTemplate1",
-                },
-                raw_json: {},
-                stream_url: null,
-                transcript: "Hello there",
-                transcript_audio_url: "https://aurl.com/test",
-            });
-        } else if (message === "cardWithoutMaintitle") {
-            return Promise.resolve({
-                card: {
-                    imageURL: "https://card.com/image",
-                    mainTitle: null as any,
-                    subTitle: "SubTitle",
-                    textField: "TextField",
-                    type: "BodyTemplate1",
-                },
-                raw_json: {},
-                stream_url: null,
-                transcript: "Hello there",
-                transcript_audio_url: "https://aurl.com/test",
-            });
-        } else if (message === "cardWithoutImage") {
-            return Promise.resolve({
-                card: {
-                    imageURL: null,
-                    mainTitle: "MainTitle",
-                    subTitle: "SubTitle",
-                    textField: "TextField",
-                    type: "BodyTemplate1",
-                },
-                raw_json: {},
-                stream_url: null,
-                transcript: "Hello there",
-                transcript_audio_url: "https://aurl.com/test",
-            });
-        } else if (message === "noReply") {
-            return Promise.resolve({});
-        } else {
-            return Promise.resolve({
-                card: null,
-                raw_json: {},
-                stream_url: null,
-                transcript: "Hello there",
-                transcript_audio_url: "https://aurl.com/test",
-            });
-        }
-
-    }
-}
 describe("SlackBotTest", function() {
     before(() => {
         dotenv.config();
