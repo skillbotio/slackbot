@@ -3,10 +3,12 @@ import * as express from "express";
 import * as https from "https";
 import {SlackRouter} from "./SlackRouter";
 
+require("dotenv").config();
+
 export class Server {
-    public start(): void {
+    public async start(): Promise<void> {
         // console.log("CERT:" + process.env.SSL_CERT + " CLIENT: " + process.env.SLACK_CLIENT_ID);
-        const serverPort = process.env.SSL_CERT ? 443 : 3000;
+        const serverPort = process.env.SSL_CERT ? 443 : 3001;
         const app = express();
 
         // JSON Parser
@@ -15,7 +17,7 @@ export class Server {
         // Swagger is the only static for now
         app.use(express.static("static"));
 
-        app.use(new SlackRouter().router());
+        app.use(await new SlackRouter().router());
 
         if (process.env.SSL_CERT) {
             const cert = process.env.SSL_CERT as string;
@@ -35,5 +37,7 @@ export class Server {
                 console.log("SilentEchoBot running on port: " + serverPort);
             });
         }
+
+        return Promise.resolve();
     }
 }

@@ -4,6 +4,7 @@
     "cyclomatic-complexity": true,
     "max-classes-per-file": 3,
     "no-console": false,
+    "no-var-requires": false,
     "only-arrow-functions": false
   }
 }

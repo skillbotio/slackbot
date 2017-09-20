@@ -3,13 +3,12 @@ import * as express from "express";
 import * as http from "http";
 import * as https from "https";
 import {DataManager} from "./DataManager";
-import {SlackBot, SlackBotReply} from "./SlackBot";
+import {SlackBot} from "./SlackBot";
 
 export class SlackRouter {
-    public router(): express.Router {
+    public async router(): Promise<express.Router> {
         const dataManager = new DataManager();
-        dataManager.createSlackAuthTable();
-        dataManager.createSlackUserTable();
+        await dataManager.createSlackAuthTable();
 
         const slackBot = new SlackBot();
 
@@ -35,22 +34,6 @@ export class SlackRouter {
             // We respond immediately or we start getting retries
             response.status(200);
             response.send({});
-            console.log("Response sent");
-            return;
-        });
-
-        router.post("/slack_command", (request: express.Request, response: express.Response) => {
-            const slackEvent = request.body;
-            console.log("ContentType: " + request.header("Content-Type"));
-            console.log("SlackCommand: " + JSON.stringify(slackEvent));
-
-            slackBot.onCommand(slackEvent).then((reply: SlackBotReply) => {
-                console.log("Error: " + reply.error);
-            });
-
-            // We respond immediately or we start getting retries
-            response.status(200);
-            response.send();
             console.log("Response sent");
             return;
         });
@@ -84,7 +67,7 @@ export class SlackRouter {
                 accessResponse.on("end", () => {
                     console.log("Data: {data}", data);
                     const json = JSON.parse(data);
-                    dataManager.saveSlackAuth(json).then(() => {
+                    dataManager.saveSlackAuth(process.env.SLACK_CLIENT_TOKEN as string, json).then(() => {
                         console.log("Saved Auth Data. Success");
                         response.redirect("/success.html");
                     }).catch((error: Error) => {

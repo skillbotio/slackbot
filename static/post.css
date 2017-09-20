@@ -1,0 +1,32 @@
+body {
+    font-family: Lato;
+    margin: auto;
+    text-align: center;
+}
+
+table {
+    margin-top: 20pt;
+    width: 500px;
+}
+
+td.field {
+    font-weight: bold
+}
+
+tr.title td {
+    font-size: 24pt;
+    padding-bottom: 20px;
+}
+
+tr.card td {
+    font-size: 18pt;
+    padding-top: 10px;
+}
+
+tr.about td {
+    padding-top: 20px;
+}
+
+td {
+    padding-bottom: 3px;
+}

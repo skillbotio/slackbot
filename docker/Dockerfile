@@ -6,9 +6,9 @@ EXPOSE 443 3000
 
 WORKDIR /opt
 
-RUN mkdir silent-echo-bot
+RUN mkdir slackbot
 
-WORKDIR /opt/silent-echo-bot
+WORKDIR /opt/slackbot
 
 COPY bin/ ./bin/
 
@@ -18,7 +18,7 @@ COPY static/ ./static/
 
 COPY *.json ./
 
-RUN npm install
+RUN npm install --quiet
 
 RUN npm run tsc
 

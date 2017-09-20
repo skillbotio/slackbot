@@ -2,47 +2,6 @@ import {assert} from "chai";
 import {SlackBotMessage} from "../src/SlackBotMessage";
 
 describe("SlackBotMessage", function() {
-    describe("#parseCommand()", () => {
-        it("Should handle a command", async () => {
-            const command = SlackBotMessage.fromCommand({
-                channel_id: "D60DMHG95",
-                channel_name: "directmessage",
-                command: "/alexa",
-                response_url: "httpsblahblahblah",
-                team_domain: "bespoken-team",
-                team_id: "T4HJBFNCS",
-                text: "hi",
-                token: "QEJufRDfZkbK2MvyfgB5Ofud",
-                user_id: "U4GSZ33U0",
-                user_name: "jpk",
-            }) as SlackBotMessage;
-
-            assert.equal(command.channelID, "D60DMHG95");
-            assert.equal(command.teamID, "T4HJBFNCS");
-            assert.equal(command.userID, "U4GSZ33U0");
-            assert.equal(command.text, "hi");
-            assert.isTrue(command.isValid());
-            assert.isTrue(command.isDirect());
-        });
-
-        it ("Should handle long command", async () => {
-            const command = SlackBotMessage.fromCommand({
-                channel_id: "D60DMHG95",
-                channel_name: "directmessage",
-                command: "/alexa",
-                response_url: "httpsblahblahblah",
-                team_domain: "bespoken-team",
-                team_id: "T4HJBFNCS",
-                text: "hi there how are you",
-                token: "QEJufRDfZkbK2MvyfgB5Ofud",
-                user_id: "U4GSZ33U0",
-                user_name: "jpk",
-            }) as SlackBotMessage;
-
-            assert.equal(command.text, "hi there how are you");
-        });
-    });
-
     describe("#parseMessage()", () => {
         it("parsesMessage", () => {
             const messageJSON = {
