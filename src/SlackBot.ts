@@ -73,26 +73,7 @@ export class SlackBot {
         console.log("TeamID: " + message.teamID + " UserID: " + message.userID);
         const userToken = message.userKey();
 
-        // If we already have registered this user, we process the message
-        if (userToken) {
-            return this.processMessage(message, bot, userToken);
-        } else {
-            // If the message is 36 characters long, with 5 "-"s, then we assume it is a UUID for the user
-            if (message.text.length === 36 && message.text.split("-").length === 5) {
-                return this.postMessage(bot.bot_access_token,
-                    message.channelID,
-                    "Thank you for registering. Speak to Alexa!");
-            } else {
-                // Otherwise, we ask them to register
-                const registerURL = "https://silentecho.bespoken.io/link_account?token=true"
-                    + "&slack=" + (message.teamID + message.userID);
-                const reply = "You have not registered with Silent Echo yet. " +
-                    "To register, <" + registerURL + "|just click here!>\n" +
-                    "Follow the steps, then come back.\n" +
-                    "Questions? Here is our <https://silentecho.bespoken.io/faq|FAQ>";
-                return this.postMessage(bot.bot_access_token, message.channelID, reply);
-            }
-        }
+        return this.processMessage(message, bot, userToken);
     }
 
     private async handleChannelMessage(slackMessage: SlackBotMessage): Promise<SlackBotReply> {
@@ -102,7 +83,7 @@ export class SlackBot {
             return Promise.resolve(e);
         }
 
-        const bot = await this.lookupBot(slackMessage.appID, slackMessage.teamID);
+        const bot = await this.lookupBot(this.clientToken, slackMessage.teamID);
         console.log("ChannelMessage: " + slackMessage.textClean());
 
         // If the bot is called in the message, then reply
@@ -112,8 +93,7 @@ export class SlackBot {
             return Promise.resolve(error);
         }
 
-        const userToken = process.env.GENERIC_USER_TOKEN;
-        return this.processMessage(slackMessage, bot, userToken as string);
+        return this.processMessage(slackMessage, bot, slackMessage.userKey());
     }
 
     private async processMessage(message: SlackBotMessage, bot: IBot, userToken: string): Promise<SlackBotReply> {
