@@ -1,5 +1,5 @@
-[![CircleCI](https://circleci.com/gh/bespoken/silent-echo-bot.svg?style=svg)](https://circleci.com/gh/bespoken/silent-echo-bot)
-[![codecov](https://codecov.io/gh/bespoken/silent-echo-bot/branch/master/graph/badge.svg)](https://codecov.io/gh/bespoken/silent-echo-bot)
+[![CircleCI](https://circleci.com/gh/skillbotio/slackbot.svg?style=svg&circle-token=0731b7f790046895f322114f610638c606876e13)](https://circleci.com/gh/skillbotio/slackbot)
+[![codecov](https://codecov.io/gh/skillbotio/slackbot/branch/master/graph/badge.svg?token=YfDR7oEnUj)](https://codecov.io/gh/skillbotio/slackbot)
 
 # About This Project
 This shows how to use the [silent-echo-sdk](https://github.com/bespoken/silent-echo-sdk) as part of a Slackbot.
