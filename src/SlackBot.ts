@@ -1,4 +1,4 @@
-import {SkillBotClient} from "skill-bot-client";
+import {SkillBotClient} from "skillbot-client";
 import {DataManager} from "./DataManager";
 import {MessageType, SlackBotMessage} from "./SlackBotMessage";
 
@@ -176,6 +176,19 @@ export class SlackBot {
                 replyMessage = "No reply from SkillBot";
             }
 
+            // Add in skill identification/branding
+            if (result.skill) {
+                const skillIdentifier: any = {
+                    author_name: result.skill.name,
+                    color: "#ff8c56",
+                    fallback: result.skill.name,
+                };
+
+                if (result.skill.imageURL) {
+                    skillIdentifier.author_icon = result.skill.imageURL;
+                }
+                options.attachments.push(skillIdentifier);
+            }
             return this.postMessage(bot.bot_access_token, message.channelID, replyMessage, options);
         } catch (e) {
             console.log("Error calling SilentEchoSDK: " + e);
