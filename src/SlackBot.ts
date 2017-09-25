@@ -100,7 +100,7 @@ export class SlackBot {
         const skillBot = new SkillBotClient(process.env.SKILLBOT_URL);
 
         try {
-            const result = await skillBot.message("SLACK", message.userID, message.textClean());
+            const result = await skillBot.message("SLACK", message.channelID, message.userID, message.textClean());
             console.log("Result: " + JSON.stringify(result, null, 2));
             const options: any = {
                 attachments: [] as any[],
