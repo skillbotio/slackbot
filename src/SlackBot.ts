@@ -170,10 +170,9 @@ export class SlackBot {
             }
 
             const reply = await this.postMessage(bot.bot_access_token, message.channelID, replyMessage, options);
-            // if (result.user.attributes.debugEnabled) {
-
-            // }
-            await this.postDebugInfo(message, bot.bot_access_token, result);
+            if (result.user.attributes.debugEnabled) {
+                await this.postDebugInfo(message, bot.bot_access_token, result);
+            }
             return Promise.resolve(reply);
         } catch (e) {
             console.log("Error calling SilentEchoSDK: " + e);

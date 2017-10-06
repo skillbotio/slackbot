@@ -15,5 +15,8 @@
     "strictNullChecks" :true,
     "target": "ES6"
   },
+  "typeRoots": [
+    "./node_modules/@types"
+  ],
   "exclude": ["node_modules", "node_modules/@types/request-promise-native/node_modules/@types/request/index.d.ts"]
 }

@@ -48,7 +48,19 @@ describe("SlackBotTest", function() {
                         imageUrl: "https://i.giphy.com/media/3o7buirYcmV5nSwIRW/480w_s.jpg",
                         title: "My Title",
                     },
+                    raw: {
+                        request: {},
+                        response: {},
+                    },
+                    skill: {
+                        name: "We Study Billionaires",
+                    },
                     text: "Hi",
+                    user: {
+                        attributes: {
+                            debugEnabled: true,
+                        },
+                    },
                 });
 
             nock("https://slack.com")
@@ -63,9 +75,15 @@ describe("SlackBotTest", function() {
                     ts: "1405895017.000506",
                 });
 
+            nock("https://slack.com")
+                .post("/api/files.upload")
+                .times(2)
+                .query(true)
+                .reply(200, { ok: true });
+
             const slackBot = new SlackBot();
             const reply = await slackBot.onMessage(message);
-
+            console.log("Reply: " + JSON.stringify(reply));
             assert.isUndefined(reply.error);
             assert.isTrue(reply.slackResponse.ok);
             console.log("Reply: " + JSON.stringify(reply.slackResponse));
