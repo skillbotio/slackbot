@@ -34,6 +34,9 @@ export class SlackBotMessage {
     }
 
     public appID: string;
+
+    // This represent the user ID for the app
+    public authedUser: string;
     public channelID: string;
     public rawPayload: any;
     public teamID: string;
@@ -68,6 +71,10 @@ export class SlackBotMessage {
         this.teamID = this.rawPayload.team_id;
         this.text = this.rawPayload.event.text;
         this.userID = this.rawPayload.event.user;
+
+        if (this.rawPayload.authed_users && this.rawPayload.authed_users.length > 0) {
+            this.authedUser = this.rawPayload.authed_users[0];
+        }
         return true;
     }
 }

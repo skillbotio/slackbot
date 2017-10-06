@@ -3,6 +3,7 @@ import {DataManager} from "./DataManager";
 import {MessageType, SlackBotMessage} from "./SlackBotMessage";
 
 export class SlackBot {
+    private static ATTACHMENT_COLOR: string = "#FF6437";
     private dataManager: DataManager;
     private messageSet: Set<string>;
     private clientToken: string; // Unique token for this particular slack app
@@ -51,6 +52,12 @@ export class SlackBot {
     private async handleMessage(message: SlackBotMessage): Promise<SlackBotReply> {
         console.log("Message: " + message.text);
         if (message.isValid()) {
+            // Ignore message that come from our app
+            if (message.userID === message.authedUser) {
+                console.log("Ignoring message from App User");
+                return Promise.resolve(SlackBotReply.Error("Ignoring message from App User"));
+            }
+
             if (message.isDirect()) {
                 return this.handleDirectMessage(message);
             } else {
@@ -107,14 +114,19 @@ export class SlackBot {
             };
 
             if (result.text) {
-                options.text = result.text;
+                this.addAttachment(options.attachments, result, {
+                    color: SlackBot.ATTACHMENT_COLOR,
+                    footer: "Speech",
+                    text: result.text,
+                });
             }
 
             if (result.streamURL) {
                 const text = "<" + result.streamURL + "|Link To Audio>";
-                options.attachments.push({
+                this.addAttachment(options.attachments, result,  {
                     author_name: ":speaker: Audio Stream",
-                    color: "#D0D3D4",
+                    color: SlackBot.ATTACHMENT_COLOR,
+                    footer: "Audio",
                     text,
                 });
             }
@@ -136,7 +148,8 @@ export class SlackBot {
                 }
 
                 const card: any = {
-                    color: "#ccf2ff",
+                    color: SlackBot.ATTACHMENT_COLOR,
+                    footer: "Card",
                     text: result.card.content,
                 };
 
@@ -148,7 +161,7 @@ export class SlackBot {
                     card.image_url = result.card.imageURL;
                 }
 
-                options.attachments.push(card);
+                this.addAttachment(options.attachments, result, card);
             }
 
             let replyMessage: any;
@@ -156,24 +169,68 @@ export class SlackBot {
                 replyMessage = "No reply from SkillBot";
             }
 
-            // Add in skill identification/branding
-            if (result.skill) {
-                const skillIdentifier: any = {
-                    author_name: result.skill.name,
-                    color: "#ff8c56",
-                    fallback: result.skill.name,
-                };
+            const reply = await this.postMessage(bot.bot_access_token, message.channelID, replyMessage, options);
+            // if (result.user.attributes.debugEnabled) {
 
-                if (result.skill.imageURL) {
-                    skillIdentifier.author_icon = result.skill.imageURL;
-                }
-                options.attachments.push(skillIdentifier);
-            }
-            return this.postMessage(bot.bot_access_token, message.channelID, replyMessage, options);
+            // }
+            await this.postDebugInfo(message, bot.bot_access_token, result);
+            return Promise.resolve(reply);
         } catch (e) {
             console.log("Error calling SilentEchoSDK: " + e);
             return Promise.resolve(SlackBotReply.Error(e.toString()));
         }
+    }
+
+    private async postDebugInfo(message: SlackBotMessage, authToken: string, result: any): Promise<void> {
+        const WebClient = require("@slack/client").WebClient;
+        const webClient = new WebClient(authToken);
+
+        // Posts the request and response to the slack channel
+        await this.postFile(webClient,
+            "request.json",
+            "Request Payload - \"" + message.textClean() + "\"",
+            message.channelID,
+            result.raw.request);
+
+        await this.postFile(webClient,
+            "response.json",
+            "Response Payload - \"" + message.textClean() + "\"",
+            message.channelID,
+            result.raw.response);
+
+        return Promise.resolve();
+    }
+
+    private postFile(client: any, name: string, title: string, channel: string, payload: any): Promise<void> {
+        return new Promise((resolve, reject) => {
+            const uploadOptions = {
+                channels: channel,
+                content: JSON.stringify(payload, null, 2),
+                // filename: "Request.json",
+                filetype: "javascript",
+                title,
+            };
+
+            client.files.upload(name, uploadOptions, function(error: any, response: any) {
+                if (error) {
+                    reject(error);
+                } else {
+                    console.log("Posted Message!");
+                    resolve();
+                }
+            });
+        });
+    }
+
+    private addAttachment(attachments: any[], result: any, attachment: any) {
+        // If this is the first attachment, add skill identification to it
+        if (attachments.length === 0) {
+            attachment.author_name = result.skill.name;
+            if (result.skill.imageURL) {
+                attachment.thumb_url = result.skill.imageURL;
+            }
+        }
+        attachments.push(attachment);
     }
 }
 
