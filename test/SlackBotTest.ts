@@ -75,6 +75,7 @@ describe("SlackBotTest", function() {
                     ts: "1405895017.000506",
                 });
 
+            // We simulate the two calls for the debug file uploads
             nock("https://slack.com")
                 .post("/api/files.upload")
                 .times(2)

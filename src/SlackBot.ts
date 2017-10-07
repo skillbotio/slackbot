@@ -170,9 +170,7 @@ export class SlackBot {
             }
 
             const reply = await this.postMessage(bot.bot_access_token, message.channelID, replyMessage, options);
-            if (result.user.attributes.debugEnabled) {
-                await this.postDebugInfo(message, bot.bot_access_token, result);
-            }
+            await this.postDebugInfo(message, bot.bot_access_token, result);
             return Promise.resolve(reply);
         } catch (e) {
             console.log("Error calling SilentEchoSDK: " + e);
@@ -181,6 +179,14 @@ export class SlackBot {
     }
 
     private async postDebugInfo(message: SlackBotMessage, authToken: string, result: any): Promise<void> {
+        const associatedSkills = result.user.attributes.skills;
+        // If this skill is not owned by the user, or debugging is not enabled
+        if (!associatedSkills ||
+            !associatedSkills.includes(result.skill.id.toLowerCase()) ||
+            !result.user.attributes.debugEnabled) {
+            return;
+        }
+
         const WebClient = require("@slack/client").WebClient;
         const webClient = new WebClient(authToken);
 
@@ -223,7 +229,7 @@ export class SlackBot {
 
     private addAttachment(attachments: any[], result: any, attachment: any) {
         // If this is the first attachment, add skill identification to it
-        if (attachments.length === 0) {
+        if (attachments.length === 0 && result.skill) {
             attachment.author_name = result.skill.name;
             if (result.skill.imageURL) {
                 attachment.thumb_url = result.skill.imageURL;
