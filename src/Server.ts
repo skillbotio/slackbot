@@ -11,6 +11,10 @@ export class Server {
         const serverPort = process.env.SSL_CERT ? 443 : 3001;
         const app = express();
 
+        // We are using pug for templating
+        app.set("view engine", "ejs");
+        // app.set("views", "views");
+
         // JSON Parser
         app.use(bodyParser.json());
 

@@ -33,6 +33,7 @@
     "@types/uuid": "^3.0.0",
     "body-parser": "^1.17.2",
     "dynasty": "^0.2.7",
+    "ejs": "^2.5.7",
     "express": "^4.15.3",
     "nock": "^9.0.15",
     "request": "^2.81.0",

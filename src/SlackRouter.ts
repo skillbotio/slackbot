@@ -19,6 +19,14 @@ export class SlackRouter {
 
         const redirectURL = process.env.BASE_URL + "/slack_auth_response";
 
+        router.get("/success", (req, res) => {
+            res.render("success");
+        });
+
+        router.get("/error", (req, res) => {
+            res.render("error");
+        });
+
         router.post("/slack_message", (request: express.Request, response: express.Response) => {
             const slackEvent = request.body;
 
@@ -71,9 +79,9 @@ export class SlackRouter {
                     const json = JSON.parse(data);
                     dataManager.saveSlackAuth(process.env.SLACK_CLIENT_TOKEN as string, json).then(() => {
                         console.log("Saved Auth Data. Success");
-                        response.redirect("/success.html");
+                        response.redirect("/success");
                     }).catch((error: Error) => {
-                        response.redirect("/error.html");
+                        response.redirect("/error");
                     });
                 });
             });

@@ -1,8 +1,12 @@
+h1 {
+    font-family: Khand;
+}
+
 h2 {
-    font-family: Lato;
+    font-family: Roboto;
     font-size: 20pt;
 }
 
 div {
-    font-family: Lato;
+    font-family: Roboto;
 }
