@@ -39,7 +39,7 @@ describe("SlackBotTest", function() {
                 type: "event_callback",
             };
 
-            nock("https://skillbot.bespoken.io")
+            nock("https://skillbot.io")
                 .get("/message")
                 .query(true)
                 .reply(200, {
