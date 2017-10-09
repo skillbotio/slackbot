@@ -1,19 +1,16 @@
 import * as bodyParser from "body-parser";
 import * as express from "express";
-import * as https from "https";
 import {SlackRouter} from "./SlackRouter";
 
 require("dotenv").config();
 
 export class Server {
     public async start(): Promise<void> {
-        // console.log("CERT:" + process.env.SSL_CERT + " CLIENT: " + process.env.SLACK_CLIENT_ID);
-        const serverPort = process.env.SSL_CERT ? 443 : 3001;
+        const serverPort = parseInt(process.env.SERVER_PORT ? process.env.SERVER_PORT as string : "3002", 10);
         const app = express();
 
-        // We are using pug for templating
+        // We are using ejs for templating
         app.set("view engine", "ejs");
-        // app.set("views", "views");
 
         // JSON Parser
         app.use(bodyParser.json());
@@ -23,24 +20,9 @@ export class Server {
 
         app.use(await new SlackRouter().router());
 
-        if (process.env.SSL_CERT) {
-            const cert = process.env.SSL_CERT as string;
-            const key = process.env.SSL_KEY as string;
-
-            const credentials = {
-                cert: cert.replace(/\\n/g, "\n"),
-                key: key.replace(/\\n/g, "\n"),
-            };
-
-            const httpsServer = https.createServer(credentials, app);
-            httpsServer.listen(serverPort, () => {
-                console.log("SilentEchoBot running on port 443");
-            });
-        } else {
-            app.listen(serverPort, () => {
-                console.log("SilentEchoBot running on port: " + serverPort);
-            });
-        }
+        app.listen(serverPort, () => {
+            console.log("SilentEchoBot running on port: " + serverPort);
+        });
 
         return Promise.resolve();
     }
