@@ -16,6 +16,8 @@ COPY src/ ./src/
 
 COPY static/ ./static/
 
+COPY views/ ./views/
+
 COPY *.json ./
 
 RUN npm install --quiet
