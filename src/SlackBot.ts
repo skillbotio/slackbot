@@ -173,7 +173,7 @@ export class SlackBot {
             await this.postDebugInfo(message, bot.bot_access_token, result);
             return Promise.resolve(reply);
         } catch (e) {
-            console.log("Error calling SilentEchoSDK: " + e);
+            console.log("Error calling Skillbot API: " + e);
             return Promise.resolve(SlackBotReply.Error(e.toString()));
         }
     }
@@ -181,8 +181,9 @@ export class SlackBot {
     private async postDebugInfo(message: SlackBotMessage, authToken: string, result: any): Promise<void> {
         const associatedSkills = result.user.attributes.skills;
         // If this skill is not owned by the user, or debugging is not enabled
+        const cleanSkillID = result.skill.id.toLowerCase().split(".").join("").split("-").join("");
         if (!associatedSkills ||
-            !associatedSkills.includes(result.skill.id.toLowerCase()) ||
+            !associatedSkills.includes(cleanSkillID) ||
             !result.user.attributes.debugEnabled) {
             return;
         }
