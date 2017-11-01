@@ -53,6 +53,7 @@ describe("SlackBotTest", function() {
                         response: {},
                     },
                     skill: {
+                        id: "we-study-billionaires",
                         name: "We Study Billionaires",
                     },
                     text: "Hi",
