@@ -50,7 +50,13 @@ describe("SlackBotTest", function() {
                     },
                     raw: {
                         request: {},
-                        response: {},
+                        response: {
+                            response: {
+                                outputSpeech: {
+                                    ssml: "<speak> Hi </speak>",
+                                },
+                            },
+                        },
                     },
                     skill: {
                         id: "we-study-billionaires",
@@ -89,6 +95,46 @@ describe("SlackBotTest", function() {
             assert.isUndefined(reply.error);
             assert.isTrue(reply.slackResponse.ok);
             console.log("Reply: " + JSON.stringify(reply.slackResponse));
+        });
+    });
+
+    describe("Test Extract SSML", () => {
+        it("Extracts simple SSML", () => {
+            const ssml = "<speak>test</speak>";
+            const output = (SlackBot as any).extractSSML(ssml);
+            assert.equal(output, "test");
+        });
+
+        it("Extracts simple SSML with spaces", () => {
+            const ssml = " <speak> test </speak> ";
+            const output = (SlackBot as any).extractSSML(ssml);
+            assert.equal(output, "test");
+        });
+
+        it("Extracts SSML with single audio file", () => {
+            const ssml = "<speak><audio src=\"https://test.mp3\" /></speak>";
+            const output = (SlackBot as any).extractSSML(ssml);
+            assert.equal(output, "<https://test.mp3|SSML Audio>");
+        });
+
+        it("Extracts SSML with multiple audio files", () => {
+            const ssml = "<speak>test" +
+                "<audio src=\"https://test.mp3\" />" +
+                "test 2 " +
+                "<audio src=\"https://test2.mp3\" /> test 3 </speak>";
+            const output = (SlackBot as any).extractSSML(ssml);
+            assert.equal(output, "test <https://test.mp3|SSML Audio> test 2 " +
+                "<https://test2.mp3|SSML Audio> test 3");
+        });
+
+        it("Extracts SSML with multiple audio files and surrounding tags", () => {
+            const ssml = "<speak>test" +
+                "<audio src=\"https://test.mp3\" />" +
+                "<b>test 2</b>" +
+                "<audio src=\"https://test2.mp3\" /> test 3 </speak>";
+            const output = (SlackBot as any).extractSSML(ssml);
+            assert.equal(output, "test <https://test.mp3|SSML Audio>" +
+                " test 2 <https://test2.mp3|SSML Audio> test 3");
         });
     });
 

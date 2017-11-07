@@ -4,6 +4,54 @@ import {MessageType, SlackBotMessage} from "./SlackBotMessage";
 
 export class SlackBot {
     private static ATTACHMENT_COLOR: string = "#FF6437";
+    private static hasOutputSpeech(reply: any): boolean {
+        return reply.raw.response.response.outputSpeech !== undefined;
+    }
+
+    private static extractOutputSpeech(reply: any): string {
+        let text = "";
+        if (reply.raw.response.response.outputSpeech.ssml) {
+            text = SlackBot.extractSSML(reply.raw.response.response.outputSpeech.ssml);
+
+        } else {
+            text = reply.raw.response.response.outputSpeech.text;
+        }
+        return text;
+    }
+
+    private static extractSSML(ssml: string): string {
+        // Grab SSML blocks
+        const ssmlPartEnd = ssml.indexOf("<");
+        if (ssmlPartEnd === -1) {
+            return ssml.substring(0).trim();
+        } else if (ssmlPartEnd === 0) {
+            const tagEnd = ssml.indexOf(">");
+            // If there is no end to a tag, just return the whole SSML chunk and do not parse anymore
+            if (tagEnd === -1) {
+                return ssml;
+            }
+            const tag = ssml.substring(0, tagEnd + 1).trim();
+            if (tag.includes("audio")) {
+                const match = tag.match("src.*=\"(.*)\"");
+                if (match !== null) {
+                    return "<" + match[1] + "|SSML Audio>" + " " + SlackBot.extractSSML(ssml.substring(tagEnd + 1));
+                } else {
+                    return SlackBot.extractSSML(ssml.substring(ssmlPartEnd)).trim();
+                }
+            } else {
+                return SlackBot.extractSSML(ssml.substring(tagEnd + 1)).trim();
+            }
+
+        } else {
+            const firstPart = ssml.substring(0, ssmlPartEnd).trim();
+            let reply = "";
+            if (firstPart.length > 0) {
+                reply = firstPart + " " ;
+            }
+            return reply + SlackBot.extractSSML(ssml.substring(ssmlPartEnd)).trim();
+        }
+    }
+
     private dataManager: DataManager;
     private messageSet: Set<string>;
     private clientToken: string; // Unique token for this particular slack app
@@ -78,9 +126,7 @@ export class SlackBot {
 
         const bot = await this.lookupBot(this.clientToken, message.teamID);
         console.log("TeamID: " + message.teamID + " UserID: " + message.userID);
-        const userToken = message.userKey();
-
-        return this.processMessage(message, bot, userToken);
+        return this.processMessage(message, bot);
     }
 
     private async handleChannelMessage(slackMessage: SlackBotMessage): Promise<SlackBotReply> {
@@ -100,10 +146,10 @@ export class SlackBot {
             return Promise.resolve(error);
         }
 
-        return this.processMessage(slackMessage, bot, slackMessage.userKey());
+        return this.processMessage(slackMessage, bot);
     }
 
-    private async processMessage(message: SlackBotMessage, bot: IBot, userToken: string): Promise<SlackBotReply> {
+    private async processMessage(message: SlackBotMessage, bot: IBot): Promise<SlackBotReply> {
         const skillBot = new SkillBotClient(process.env.SKILLBOT_URL);
 
         try {
@@ -113,11 +159,13 @@ export class SlackBot {
                 attachments: [] as any[],
             };
 
-            if (result.text) {
+            const hasOutputSpeech = SlackBot.hasOutputSpeech(result);
+            if (hasOutputSpeech) {
+                const text = SlackBot.extractOutputSpeech(result);
                 this.addAttachment(options.attachments, result, {
                     color: SlackBot.ATTACHMENT_COLOR,
                     footer: "Speech",
-                    text: result.text,
+                    text,
                 });
             }
 
@@ -165,7 +213,7 @@ export class SlackBot {
             }
 
             let replyMessage: any;
-            if (!result.text && !result.streamURL) {
+            if (!hasOutputSpeech && !result.streamURL) {
                 replyMessage = "No reply from SkillBot";
             }
 
@@ -217,7 +265,7 @@ export class SlackBot {
                 title,
             };
 
-            client.files.upload(name, uploadOptions, function(error: any, response: any) {
+            client.files.upload(name, uploadOptions, function(error: any) {
                 if (error) {
                     reject(error);
                 } else {
