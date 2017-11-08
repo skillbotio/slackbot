@@ -96,6 +96,77 @@ describe("SlackBotTest", function() {
             assert.isTrue(reply.slackResponse.ok);
             console.log("Reply: " + JSON.stringify(reply.slackResponse));
         });
+
+        it("Should process a message with a response json", async () => {
+            const message = {
+                api_app_id: "A5ZALHNN6",
+                authed_users: ["U65SQ8DE3"],
+                event: {
+                    channel: "D655524SH",
+                    event_ts: "1499453429.099535",
+                    text: "tell we study billionaires to play next",
+                    ts: "1499453429.099535",
+                    type: "message",
+                    user: "U64VD25GT",
+                },
+                event_id: "Ev66DGAJBZ",
+                event_time: 1499453429,
+                team_id: "T64C0AX7A",
+                token: "jj5RVapcDv8EcehoZ1HavpTx",
+                type: "event_callback",
+            };
+
+            nock("https://skillbot.io")
+                .get("/message")
+                .query(true)
+                .reply(200, {
+                        card: {
+                            content: "My TextField",
+                            imageUrl: "https://i.giphy.com/media/3o7buirYcmV5nSwIRW/480w_s.jpg",
+                            title: "My Title",
+                        },
+                        raw: {
+                            request: {},
+                        },
+
+                        skill: {
+                            id: "we-study-billionaires",
+                                name: "We Study Billionaires",
+                        },
+                        text: "Hi",
+                            user: {
+                            attributes: {
+                                debugEnabled: true,
+                            },
+                        },
+                });
+
+            nock("https://slack.com")
+                .post("/api/chat.postMessage")
+                .query(true)
+                .reply(200, {
+                    channel: "C024BE91L",
+                    message: {
+                        // The message you wrote, as we interpreted it
+                    },
+                    ok: true,
+                    ts: "1405895017.000506",
+                });
+
+            // We simulate the two calls for the debug file uploads
+            nock("https://slack.com")
+                .post("/api/files.upload")
+                .once()
+                .query(true)
+                .reply(200, { ok: true });
+
+            const slackBot = new SlackBot();
+            const reply = await slackBot.onMessage(message);
+            console.log("Reply: " + JSON.stringify(reply));
+            assert.isUndefined(reply.error);
+            assert.isTrue(reply.slackResponse.ok);
+            console.log("Reply: " + JSON.stringify(reply.slackResponse));
+        });
     });
 
     describe("Test Extract SSML", () => {

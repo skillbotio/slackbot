@@ -4,17 +4,18 @@ import {MessageType, SlackBotMessage} from "./SlackBotMessage";
 
 export class SlackBot {
     private static ATTACHMENT_COLOR: string = "#FF6437";
-    private static hasOutputSpeech(reply: any): boolean {
-        return reply.raw.response.response.outputSpeech !== undefined;
-    }
 
-    private static extractOutputSpeech(reply: any): string {
-        let text = "";
-        if (reply.raw.response.response.outputSpeech.ssml) {
-            text = SlackBot.extractSSML(reply.raw.response.response.outputSpeech.ssml);
+    private static extractOutputSpeech(reply: any): string | void {
+        let text;
+        if (reply.raw && reply.raw.response) {
+            if (reply.raw.response.response.outputSpeech.ssml) {
+                text = SlackBot.extractSSML(reply.raw.response.response.outputSpeech.ssml);
 
+            } else {
+                text = reply.raw.response.response.outputSpeech.text;
+            }
         } else {
-            text = reply.raw.response.response.outputSpeech.text;
+            text = reply.text;
         }
         return text;
     }
@@ -159,7 +160,7 @@ export class SlackBot {
                 attachments: [] as any[],
             };
 
-            const hasOutputSpeech = SlackBot.hasOutputSpeech(result);
+            const hasOutputSpeech = SlackBot.extractOutputSpeech(result) !== undefined;
             if (hasOutputSpeech) {
                 const text = SlackBot.extractOutputSpeech(result);
                 this.addAttachment(options.attachments, result, {
@@ -240,17 +241,21 @@ export class SlackBot {
         const webClient = new WebClient(authToken);
 
         // Posts the request and response to the slack channel
-        await this.postFile(webClient,
-            "request.json",
-            "Request Payload - \"" + message.textClean() + "\"",
-            message.channelID,
-            result.raw.request);
+        if (result.raw.request) {
+            await this.postFile(webClient,
+                "request.json",
+                "Request Payload - \"" + message.textClean() + "\"",
+                message.channelID,
+                result.raw.request);
+        }
 
-        await this.postFile(webClient,
-            "response.json",
-            "Response Payload - \"" + message.textClean() + "\"",
-            message.channelID,
-            result.raw.response);
+        if (result.raw.response) {
+            await this.postFile(webClient,
+                "response.json",
+                "Response Payload - \"" + message.textClean() + "\"",
+                message.channelID,
+                result.raw.response);
+        }
 
         return Promise.resolve();
     }
