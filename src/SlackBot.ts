@@ -7,7 +7,7 @@ export class SlackBot {
 
     private static extractOutputSpeech(reply: any): string | void {
         let text;
-        if (reply.raw && reply.raw.response) {
+        if (reply.raw && reply.raw.response && reply.raw.response.outputSpeech) {
             if (reply.raw.response.response.outputSpeech.ssml) {
                 text = SlackBot.extractSSML(reply.raw.response.response.outputSpeech.ssml);
 
